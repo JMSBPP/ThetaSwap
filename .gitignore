@@ -74,9 +74,6 @@ documents/
 # Issue files
 ISSUE.md
 
-# Specification files (if they contain sensitive info)
-spec/
-
 # Dotenv file
 .env
 node_modules
