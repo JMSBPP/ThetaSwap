@@ -121,3 +121,53 @@ class QuartileRow:
     mean_blocklife_hours: float
     mean_a_t: float
     n_obs: int
+
+
+# ── Exit Hazard Model Types ───────────────────────────────────────────
+
+@dataclass(frozen=True)
+class ExitPanelRow:
+    """One position-day observation for the exit hazard model."""
+    position_idx: int
+    day: str
+    exited: int
+    a_t_lagged: float
+    il: float
+    log_age: float
+
+
+@dataclass(frozen=True)
+class LogitResult:
+    """Logit MLE estimation output with day-clustered SEs."""
+    beta_a_t: float
+    beta_il: float
+    beta_log_age: float
+    beta_intercept: float
+    se_a_t: float
+    se_il: float
+    se_log_age: float
+    se_intercept: float
+    cluster_se_a_t: float
+    cluster_se_il: float
+    cluster_se_log_age: float
+    cluster_se_intercept: float
+    p_value_a_t: float
+    cluster_p_value_a_t: float
+    n_obs: int
+    n_exits: int
+    n_clusters: int
+    log_likelihood: float
+    aic: float
+    pseudo_r2: float
+    mean_exit_prob: float
+
+
+@dataclass(frozen=True)
+class MarginalEffect:
+    """Insurance pricing translation from logit marginal effect."""
+    marginal_effect: float
+    delta_a_t: float
+    prob_increase: float
+    hours_lost: float
+    implied_premium_usd: float
+    mean_exit_prob: float

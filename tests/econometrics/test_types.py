@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from econometrics.types import (
+    ExitPanelRow,
     LaggedPositionRow,
+    LogitResult,
+    MarginalEffect,
     QuartileRow,
     RobustDurationResult,
     SensitivityRow,
@@ -51,3 +54,35 @@ def test_sensitivity_row() -> None:
 def test_quartile_row() -> None:
     q = QuartileRow(quartile=1, mean_blocklife_hours=200.0, mean_a_t=0.08, n_obs=150)
     assert q.quartile == 1
+
+
+def test_exit_panel_row_construction() -> None:
+    row = ExitPanelRow(
+        position_idx=0, day="2025-12-10", exited=1,
+        a_t_lagged=0.13, il=0.012, log_age=2.3,
+    )
+    assert row.exited in (0, 1)
+    assert row.a_t_lagged == 0.13
+    assert row.log_age == 2.3
+
+
+def test_logit_result_construction() -> None:
+    result = LogitResult(
+        beta_a_t=0.5, beta_il=-0.3, beta_log_age=-0.1, beta_intercept=-3.0,
+        se_a_t=0.1, se_il=0.2, se_log_age=0.05, se_intercept=0.5,
+        cluster_se_a_t=0.15, cluster_se_il=0.25, cluster_se_log_age=0.08, cluster_se_intercept=0.6,
+        p_value_a_t=0.001, cluster_p_value_a_t=0.003,
+        n_obs=5000, n_exits=600, n_clusters=41,
+        log_likelihood=-800.0, aic=1608.0, pseudo_r2=0.05, mean_exit_prob=0.12,
+    )
+    assert result.beta_a_t == 0.5
+    assert result.n_clusters == 41
+
+
+def test_marginal_effect_construction() -> None:
+    me = MarginalEffect(
+        marginal_effect=0.05, delta_a_t=0.10, prob_increase=0.005,
+        hours_lost=24.0, implied_premium_usd=2.40, mean_exit_prob=0.12,
+    )
+    assert me.marginal_effect == 0.05
+    assert me.implied_premium_usd == 2.40
