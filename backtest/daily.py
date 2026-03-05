@@ -8,7 +8,7 @@ from backtest.types import DailyPoolState
 BLOCKS_PER_DAY: int = 7200
 
 
-def _approximate_mint_date(burn_date: str, blocklife: int) -> str:
+def approximate_mint_date(burn_date: str, blocklife: int) -> str:
     """Estimate mint date from burn date and blocklife (blocks / 7200 = days)."""
     burn_dt = datetime.strptime(burn_date, "%Y-%m-%d")
     days_alive = blocklife / BLOCKS_PER_DAY
@@ -30,7 +30,7 @@ def build_daily_states(
     # Pre-compute mint dates for all positions
     position_windows: list[tuple[str, str]] = []
     for pos in raw_positions:
-        mint = _approximate_mint_date(pos["burn_date"], pos["blocklife"])
+        mint = approximate_mint_date(pos["burn_date"], pos["blocklife"])
         position_windows.append((mint, pos["burn_date"]))
 
     sorted_days = sorted(daily_at_map.keys())

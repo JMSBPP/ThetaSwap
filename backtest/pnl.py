@@ -1,19 +1,8 @@
 """Position-level P&L — pure function per @functional-python."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-
+from backtest.daily import approximate_mint_date
 from backtest.types import DailyPoolState, PositionPnL, ReserveState
-
-BLOCKS_PER_DAY: int = 7200
-
-
-def _approximate_mint_date(burn_date: str, blocklife: int) -> str:
-    """Estimate mint date from burn date and blocklife."""
-    burn_dt = datetime.strptime(burn_date, "%Y-%m-%d")
-    days_alive = blocklife / BLOCKS_PER_DAY
-    mint_dt = burn_dt - timedelta(days=days_alive)
-    return mint_dt.strftime("%Y-%m-%d")
 
 
 def compute_position_pnl(
@@ -28,7 +17,7 @@ def compute_position_pnl(
 
     Position is alive on day d if mint_date <= d < burn_date.
     """
-    mint_date = _approximate_mint_date(burn_date, blocklife)
+    mint_date = approximate_mint_date(burn_date, blocklife)
 
     fees = 0.0
     il_cost = 0.0
