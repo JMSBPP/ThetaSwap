@@ -31,7 +31,7 @@ import {IERC165} from "forge-std/interfaces/IERC165.sol";
 // poolManager stored in FCI's own diamond storage namespace (thetaSwap.fci).
 
 
-contract FeeConcentrationIndex is IFeeConcentrationIndex {
+contract FeeConcentrationIndex {
 
     constructor(address poolManager_) {
         fciStorage().poolManager = IPoolManager(poolManager_);
