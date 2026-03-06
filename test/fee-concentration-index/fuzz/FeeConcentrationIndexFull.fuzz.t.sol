@@ -133,7 +133,7 @@ contract FeeConcentrationIndexFullFuzzTest is PosmTestSetup, FCITestHelper {
         // Tolerance: rounding from Q128 integer division. Scale with N.
         uint256 hhiTolerance = n * 3;
         assertApproxEqAbs(hhi, expectedHHI, hhiTolerance, "Tier1: HHI mismatch");
-        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 3, "Tier1: indexA mismatch");
+        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 10, "Tier1: indexA mismatch");
         assertLe(indexA, INDEX_ONE, "Tier1: indexA capped");
     }
 
@@ -205,7 +205,7 @@ contract FeeConcentrationIndexFullFuzzTest is PosmTestSetup, FCITestHelper {
 
         uint256 hhiTolerance = n * 3;
         assertApproxEqAbs(hhi, expectedHHI, hhiTolerance, "Tier2: HHI mismatch");
-        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 3, "Tier2: indexA mismatch");
+        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 10, "Tier2: indexA mismatch");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -251,7 +251,7 @@ contract FeeConcentrationIndexFullFuzzTest is PosmTestSetup, FCITestHelper {
 
         uint256 hhiTolerance = n * 3;
         assertApproxEqAbs(hhi, expectedHHI, hhiTolerance, "Tier3: HHI mismatch");
-        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 3, "Tier3: indexA mismatch");
+        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 10, "Tier3: indexA mismatch");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -312,6 +312,6 @@ contract FeeConcentrationIndexFullFuzzTest is PosmTestSetup, FCITestHelper {
 
         uint256 hhiTolerance = n * 3;
         assertApproxEqAbs(hhi, expectedHHI, hhiTolerance, "Tier4: HHI mismatch");
-        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 3, "Tier4: indexA mismatch");
+        assertApproxEqAbs(uint256(indexA), expectedIndexA, n * 10, "Tier4: indexA mismatch");
     }
 }

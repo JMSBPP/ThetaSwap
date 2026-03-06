@@ -70,7 +70,7 @@ contract AfterAddLiquidityTest is Test, Deployers {
             salt: salt
         });
 
-        harness.exposed_afterAddLiquidity(
+        harness.afterAddLiquidity(
             sender,
             poolKey,
             params,
@@ -185,7 +185,7 @@ contract AfterAddLiquidityTest is Test, Deployers {
             salt: bytes32(0)
         });
 
-        (bytes4 selector, BalanceDelta delta) = harness.exposed_afterAddLiquidity(
+        (bytes4 selector, BalanceDelta delta) = harness.afterAddLiquidity(
             address(0xBEEF),
             poolKey,
             params,
@@ -194,7 +194,7 @@ contract AfterAddLiquidityTest is Test, Deployers {
             ""
         );
 
-        assertEq(selector, harness.afterAddLiquidity.selector, "must return afterAddLiquidity selector");
+        assertEq(selector, IHooks.afterAddLiquidity.selector, "must return afterAddLiquidity selector");
         assertEq(BalanceDelta.unwrap(delta), 0, "must return zero delta");
     }
 

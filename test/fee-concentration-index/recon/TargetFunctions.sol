@@ -11,7 +11,7 @@ import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 import {TickRange, fromTicks} from "../../../src/fee-concentration-index/types/TickRangeMod.sol";
 import {Properties} from "./Properties.sol";
 
-// Chimera TargetFunctions: fuzzer calls exposed_afterAddLiquidity directly on harness.
+// Chimera TargetFunctions: fuzzer calls afterAddLiquidity directly on harness.
 // Inputs are clamped to valid tick ranges. Ghost state updated for property checking.
 
 abstract contract TargetFunctions is BaseTargetFunctions, Properties {
@@ -40,7 +40,7 @@ abstract contract TargetFunctions is BaseTargetFunctions, Properties {
             salt: salt
         });
 
-        try harness.exposed_afterAddLiquidity(
+        try harness.afterAddLiquidity(
             sender,
             fciPoolKey,
             params,
