@@ -2,34 +2,41 @@
 pragma solidity ^0.8.26;
 
 import {PoolId} from "v4-core/src/types/PoolId.sol";
-import {AccumulatedHHI} from "../types/AccumulatedHHIMod.sol";
+import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
+import {FeeConcentrationState} from "../types/FeeConcentrationStateMod.sol";
 import {TickRangeRegistry} from "../types/TickRangeRegistryMod.sol";
 import {TickRange, intersects} from "../types/TickRangeMod.sol";
+import {SwapCount} from "../types/SwapCountMod.sol";
+import {BlockCount} from "../types/BlockCountMod.sol";
 
-// Diamond storage for Fee Concentration Index.
-// All hook state lives here — the contract itself holds only logic.
+// Diamond storage for Fee Concentration Index HookFacet.
+// Runs via delegatecall in MasterHook's storage context.
+// Namespace: keccak256("thetaSwap.fci") — disjoint from MasterHook and DiamondCut slots.
 
 struct FeeConcentrationIndexStorage {
-    // Running HHI accumulator per pool: sum of (x_k^2 / lifetime)
-    mapping(PoolId => AccumulatedHHI) accumulatedHHI;
+    // Co-primary state per pool: (accumulatedSum, thetaSum, posCount)
+    mapping(PoolId => FeeConcentrationState) fciState;
     // Per-pool tick range registry (positions grouped by range, per-range swap counters)
     mapping(PoolId => TickRangeRegistry) registries;
     // Per-position snapshot of feeGrowthInside0X128 at add time.
-    // Delta = (current feeGrowthInside0 - baseline) gives fees earned during position lifetime.
-    // Used to compute x_k (fee share ratio) when the position is removed.
     mapping(PoolId => mapping(bytes32 => uint256)) feeGrowthBaseline0;
+    // PoolManager reference — stored in facet's own namespace, not read from MasterHook.
+    // MasterHook is protocol-agnostic and does not guarantee a poolManager field.
+    IPoolManager poolManager;
 }
 
-bytes32 constant FCI_STORAGE_SLOT = keccak256("FeeConcentrationIndex.storage");
+bytes32 constant FCI_STORAGE_SLOT = keccak256("thetaSwap.fci");
 
-// Transient storage slot for caching pre-swap tick (Cancun TSTORE/TLOAD)
-bytes32 constant TICK_BEFORE_SLOT = keccak256("FeeConcentrationIndex.tickBefore");
-// Transient storage slot for caching feeGrowthInsideLast0 before V4 updates it on removal
-bytes32 constant FEE_GROWTH_LAST0_SLOT = keccak256("FeeConcentrationIndex.feeGrowthLast0");
-// Transient storage slot for caching position liquidity before V4 updates it on removal
-bytes32 constant POS_LIQUIDITY_SLOT = keccak256("FeeConcentrationIndex.posLiquidity");
-// Transient storage slot for caching rangeFeeGrowthInside0 before V4 uninitializes ticks
-bytes32 constant RANGE_FEE_GROWTH0_SLOT = keccak256("FeeConcentrationIndex.rangeFeeGrowth0");
+// Reactive FCI: same struct at a disjoint slot for V3 pool state.
+// When FCI runs on behalf of the reactive adapter, position/fee data
+// is stored here so it never collides with native V4 pool state.
+bytes32 constant REACTIVE_FCI_STORAGE_SLOT = keccak256("thetaSwap.fci.reactive");
+
+// Transient storage slots (transaction-scoped, unaffected by delegatecall)
+bytes32 constant TICK_BEFORE_SLOT = keccak256("thetaSwap.fci.tickBefore");
+bytes32 constant FEE_GROWTH_LAST0_SLOT = keccak256("thetaSwap.fci.feeGrowthLast0");
+bytes32 constant POS_LIQUIDITY_SLOT = keccak256("thetaSwap.fci.posLiquidity");
+bytes32 constant RANGE_FEE_GROWTH0_SLOT = keccak256("thetaSwap.fci.rangeFeeGrowth0");
 
 function fciStorage() pure returns (FeeConcentrationIndexStorage storage s) {
     bytes32 slot = FCI_STORAGE_SLOT;
@@ -38,26 +45,121 @@ function fciStorage() pure returns (FeeConcentrationIndexStorage storage s) {
     }
 }
 
-// ── Storage accessors ──
-
-function getAccumulatedHHI(PoolId poolId) view returns (AccumulatedHHI) {
-    return fciStorage().accumulatedHHI[poolId];
+function reactiveFciStorage() pure returns (FeeConcentrationIndexStorage storage s) {
+    bytes32 slot = REACTIVE_FCI_STORAGE_SLOT;
+    assembly {
+        s.slot := slot
+    }
 }
 
-function setAccumulatedHHI(PoolId poolId, AccumulatedHHI value) {
-    fciStorage().accumulatedHHI[poolId] = value;
+// ── PoolManager access ──
+// Reads from FCI's own diamond storage namespace.
+// Set once during facet initialization.
+
+function _poolManager() view returns (IPoolManager) {
+    return fciStorage().poolManager;
 }
 
-function setFeeGrowthBaseline0(PoolId poolId, bytes32 positionKey, uint256 value) {
-    fciStorage().feeGrowthBaseline0[poolId][positionKey] = value;
+// ── Registry wrappers (parameterized) ──
+
+function registerPosition(
+    FeeConcentrationIndexStorage storage $,
+    PoolId poolId,
+    TickRange rk,
+    bytes32 positionKey,
+    int24 tickLower,
+    int24 tickUpper,
+    uint128 posLiquidity
+) {
+    $.registries[poolId].register(rk, positionKey, tickLower, tickUpper, posLiquidity);
 }
 
-function getFeeGrowthBaseline0(PoolId poolId, bytes32 positionKey) view returns (uint256) {
-    return fciStorage().feeGrowthBaseline0[poolId][positionKey];
+// No-arg overload — V4 FCI convenience
+function registerPosition(
+    PoolId poolId,
+    TickRange rk,
+    bytes32 positionKey,
+    int24 tickLower,
+    int24 tickUpper,
+    uint128 posLiquidity
+) {
+    registerPosition(fciStorage(), poolId, rk, positionKey, tickLower, tickUpper, posLiquidity);
 }
 
-function deleteFeeGrowthBaseline0(PoolId poolId, bytes32 positionKey) {
-    delete fciStorage().feeGrowthBaseline0[poolId][positionKey];
+// ── Fee growth baseline wrappers (parameterized) ──
+
+function setFeeGrowthBaseline(FeeConcentrationIndexStorage storage $, PoolId poolId, bytes32 positionKey, uint256 feeGrowth0X128) {
+    $.feeGrowthBaseline0[poolId][positionKey] = feeGrowth0X128;
+}
+
+function setFeeGrowthBaseline(PoolId poolId, bytes32 positionKey, uint256 feeGrowth0X128) {
+    setFeeGrowthBaseline(fciStorage(), poolId, positionKey, feeGrowth0X128);
+}
+
+function getFeeGrowthBaseline(FeeConcentrationIndexStorage storage $, PoolId poolId, bytes32 positionKey) view returns (uint256) {
+    return $.feeGrowthBaseline0[poolId][positionKey];
+}
+
+function getFeeGrowthBaseline(PoolId poolId, bytes32 positionKey) view returns (uint256) {
+    return getFeeGrowthBaseline(fciStorage(), poolId, positionKey);
+}
+
+function deleteFeeGrowthBaseline(FeeConcentrationIndexStorage storage $, PoolId poolId, bytes32 positionKey) {
+    delete $.feeGrowthBaseline0[poolId][positionKey];
+}
+
+function deleteFeeGrowthBaseline(PoolId poolId, bytes32 positionKey) {
+    deleteFeeGrowthBaseline(fciStorage(), poolId, positionKey);
+}
+
+// ── Registry deregister wrappers (parameterized) ──
+
+function deregisterPosition(
+    FeeConcentrationIndexStorage storage $,
+    PoolId poolId,
+    bytes32 positionKey,
+    uint128 posLiquidity
+) returns (TickRange rk, SwapCount swapLifetime, BlockCount blockLifetime, uint128 totalRangeLiq) {
+    return $.registries[poolId].deregister(positionKey, posLiquidity);
+}
+
+function deregisterPosition(
+    PoolId poolId,
+    bytes32 positionKey,
+    uint128 posLiquidity
+) returns (TickRange rk, SwapCount swapLifetime, BlockCount blockLifetime, uint128 totalRangeLiq) {
+    return deregisterPosition(fciStorage(), poolId, positionKey, posLiquidity);
+}
+
+// ── FCI state wrappers (parameterized) ──
+
+function addStateTerm(
+    FeeConcentrationIndexStorage storage $,
+    PoolId poolId,
+    BlockCount blockLifetime,
+    uint256 xSquaredQ128
+) {
+    $.fciState[poolId].addTerm(blockLifetime, xSquaredQ128);
+}
+
+function addStateTerm(PoolId poolId, BlockCount blockLifetime, uint256 xSquaredQ128) {
+    addStateTerm(fciStorage(), poolId, blockLifetime, xSquaredQ128);
+}
+
+function incrementPosCount(FeeConcentrationIndexStorage storage $, PoolId poolId) {
+    $.fciState[poolId].incrementPos();
+}
+
+function incrementPosCount(PoolId poolId) {
+    incrementPosCount(fciStorage(), poolId);
+}
+
+function decrementPosCount(FeeConcentrationIndexStorage storage $, PoolId poolId) {
+    $.fciState[poolId].decrementPos();
+}
+
+function decrementPosCount(PoolId poolId) {
+    decrementPosCount(fciStorage(), poolId);
 }
 
 // ── Transient storage helpers ──
@@ -74,11 +176,6 @@ function t_readTick() returns (int24 tick) {
     assembly {
         tick := tload(slot)
     }
-}
-
-function sortTicks(int24 a, int24 b) pure returns (int24 tickMin, int24 tickMax) {
-    tickMin = a < b ? a : b;
-    tickMax = a > b ? a : b;
 }
 
 function t_cacheRemovalData(uint256 feeLast0, uint128 posLiquidity, uint256 rangeFeeGrowth0) {
@@ -103,10 +200,9 @@ function t_readRemovalData() returns (uint256 feeLast0, uint128 posLiquidity, ui
     }
 }
 
-// ── Loop extracted from _afterSwap ──
+// ── Overlapping ranges (parameterized) ──
 
-function incrementOverlappingRanges(PoolId poolId, int24 tickMin, int24 tickMax) {
-    FeeConcentrationIndexStorage storage $ = fciStorage();
+function incrementOverlappingRanges(FeeConcentrationIndexStorage storage $, PoolId poolId, int24 tickMin, int24 tickMax) {
     uint256 count = $.registries[poolId].activeRangeCount();
     for (uint256 i; i < count; ++i) {
         bytes32 rkRaw = $.registries[poolId].activeRangeAt(i);
@@ -117,4 +213,8 @@ function incrementOverlappingRanges(PoolId poolId, int24 tickMin, int24 tickMax)
             $.registries[poolId].incrementRangeSwapCount(TickRange.wrap(rkRaw));
         }
     }
+}
+
+function incrementOverlappingRanges(PoolId poolId, int24 tickMin, int24 tickMax) {
+    incrementOverlappingRanges(fciStorage(), poolId, tickMin, tickMax);
 }

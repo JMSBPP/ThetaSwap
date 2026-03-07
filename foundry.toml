@@ -6,11 +6,13 @@ evm_version = "cancun"
 solc_version = "0.8.26"
 via_ir = true
 ffi = true
+fs_permissions = [{ access = "read", path = "data/fixtures" }]
 
 remappings = [
     "v4-core/=lib/uniswap-hooks/lib/v4-core/",
     "lib/2025-12-panoptic/:v4-core/=lib/2025-12-panoptic/lib/v4-core/src/",
     "chimera/=lib/chimera/src/",
+    "angstrom/=lib/angstrom/contracts/",
 ]
 
 [rpc_endpoints]
