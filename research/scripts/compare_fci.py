@@ -14,10 +14,12 @@ from typing import Final
 import httpx
 
 # ── ABI constants ────────────────────────────────────────────────────────────
-# getIndex() selector: keccak256("getIndex()")[:4]
-GET_INDEX_SELECTOR: Final[str] = "0xc5b7e060"
+# getIndex((address,address,uint24,int24,address)) selector
+# Computed via: cast sig "getIndex((address,address,uint24,int24,address))"
+GET_INDEX_SELECTOR: Final[str] = "0xc40b76f6"
 
 WORD: Final[int] = 32  # bytes per ABI word
+ZERO_ADDRESS: Final[str] = "0x" + "00" * 20
 
 
 # ── Pure helpers ─────────────────────────────────────────────────────────────
@@ -68,17 +70,47 @@ def check_convergence(
 
 # ── IO helpers ───────────────────────────────────────────────────────────────
 
+def encode_pool_key(
+    currency0: str,
+    currency1: str,
+    fee: int,
+    tick_spacing: int,
+    hooks: str,
+) -> str:
+    """ABI-encode a PoolKey struct as 5 x 32-byte words (hex, no 0x prefix).
+
+    PoolKey = (address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks)
+    """
+    def _addr(a: str) -> str:
+        return a.removeprefix("0x").lower().zfill(64)
+
+    def _uint24(v: int) -> str:
+        return hex(v)[2:].zfill(64)
+
+    def _int24(v: int) -> str:
+        if v < 0:
+            v = (1 << 256) + v  # two's complement in 256-bit word
+        return hex(v)[2:].zfill(64)
+
+    return _addr(currency0) + _addr(currency1) + _uint24(fee) + _int24(tick_spacing) + _addr(hooks)
+
+
 def poll_on_chain(
     rpc_url: str,
     adapter_address: str,
+    pool_key: tuple[str, str, int, int, str],
 ) -> tuple[int, int, int]:
-    """Call ``getIndex()`` on *adapter_address* via JSON-RPC ``eth_call``."""
+    """Call ``getIndex(PoolKey)`` on *adapter_address* via JSON-RPC ``eth_call``.
+
+    *pool_key* is ``(currency0, currency1, fee, tickSpacing, hooks)``.
+    """
+    calldata = GET_INDEX_SELECTOR + encode_pool_key(*pool_key)
     payload = {
         "jsonrpc": "2.0",
         "id": 1,
         "method": "eth_call",
         "params": [
-            {"to": adapter_address, "data": GET_INDEX_SELECTOR},
+            {"to": adapter_address, "data": calldata},
             "latest",
         ],
     }
@@ -118,8 +150,18 @@ def main() -> None:
         print("ERROR: ADAPTER_ADDRESS not set", file=sys.stderr)
         sys.exit(1)
 
+    # PoolKey for V3 adapter: (currency0, currency1, fee, tickSpacing, hooks)
+    # For the V3 adapter the pool key uses the V3 pool address as hooks
+    pool_key = (
+        os.environ.get("POOL_CURRENCY0", ZERO_ADDRESS),
+        os.environ.get("POOL_CURRENCY1", ZERO_ADDRESS),
+        int(os.environ.get("POOL_FEE", "500")),
+        int(os.environ.get("POOL_TICK_SPACING", "10")),
+        os.environ.get("POOL_HOOKS", ZERO_ADDRESS),
+    )
+
     snapshots = load_off_chain(fixtures_path)
-    on_index, on_theta, on_pos = poll_on_chain(rpc_url, adapter_address)
+    on_index, on_theta, on_pos = poll_on_chain(rpc_url, adapter_address, pool_key)
 
     epsilon = float(os.environ.get("EPSILON", "0.01"))
     passed_count = 0

@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from compare_fci import parse_index_response, check_convergence, load_off_chain
+from compare_fci import parse_index_response, check_convergence, load_off_chain, encode_pool_key
 
 
 def test_parse_index_response_zeros():
@@ -69,6 +69,32 @@ def test_check_convergence_both_zero():
     result = check_convergence(on_chain_index=0, off_chain_index=0, epsilon=0.01)
     assert result.passed is True
     assert result.drift == 0.0
+
+
+def test_encode_pool_key_length():
+    """PoolKey encodes to 5 x 32-byte words = 320 hex chars."""
+    encoded = encode_pool_key(
+        "0x" + "00" * 20,
+        "0x" + "00" * 20,
+        500,
+        10,
+        "0x" + "00" * 20,
+    )
+    assert len(encoded) == 320  # 5 * 64 hex chars
+
+
+def test_encode_pool_key_negative_tick_spacing():
+    """Negative tick spacing encodes as two's complement."""
+    encoded = encode_pool_key(
+        "0x" + "00" * 20,
+        "0x" + "00" * 20,
+        500,
+        -1,
+        "0x" + "00" * 20,
+    )
+    # int24(-1) in 256-bit = 0xff...ff
+    tick_word = encoded[3 * 64 : 4 * 64]
+    assert tick_word == "f" * 64
 
 
 def test_load_off_chain_list(tmp_path: Path):
