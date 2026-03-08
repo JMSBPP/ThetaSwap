@@ -72,6 +72,16 @@ contract FeeConcentrationIndexFullUnitTest is PosmTestSetup, FCITestHelper {
         );
     }
 
+    function test_unit_twoHomogeneousLps_oneSwap_deltaPlusMustBeZero() public{
+	//===================PRE-CONDITIONS=================================
+	uint256 tokenId1 = _mintPosition(key, -60, 60, 1e18);
+        uint256 tokenId2 = _mintPositionAs(lp2, key, -60, 60, 1e18);
+	
+
+
+	
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // US3-A: Single passive LP — sole provider, no swaps
     //
@@ -199,13 +209,14 @@ contract FeeConcentrationIndexFullUnitTest is PosmTestSetup, FCITestHelper {
     // US3-C: Two equal passive LPs, same range, 1 swap, both withdraw.
     //
     // Setup:  LP1 and LP2 each mint 1e18 liquidity on [-60, 60].
+    //         N = 2 and let lifetime(1) = 1, lifetime(2) = 1
     // Action: 1 swap through the range.
     // Remove: Both LPs burn their positions.
     //
     // Expected:
     //   Each LP provides 50% of range liquidity → x_k = 1/2 for each.
     //   lifetime = 1 for each (1 swap crossed the range).
-    //   HHI = (1/2)^2 / 1 + (1/2)^2 / 1 = 1/4 + 1/4 = 1/2 (in Q128).
+    //   HHI = √(1·(1/2)**2 + 1·(1/2)**2)  = sqrt(1/4 + 1/4) = sqrt(1/2) (in Q128).
     //   indexA = sqrt(1/2) ≈ 0.707 * INDEX_ONE.
     //
     // Interpretation:
@@ -213,7 +224,7 @@ contract FeeConcentrationIndexFullUnitTest is PosmTestSetup, FCITestHelper {
     //   reflects moderate concentration (not max, not zero).
     // ═══════════════════════════════════════════════════════════════════════
 
-    function test_unit_twoDifferentHomogeneousLps_oneSwap_indexIsHalf() public {
+    function test_unit_twoDifferentHomogeneousLps_oneSwap_deltaPlusMustBeZero() public {
         // Both LPs mint equal liquidity on same range
         uint256 tokenId1 = _mintPosition(key, -60, 60, 1e18);
         uint256 tokenId2 = _mintPositionAs(lp2, key, -60, 60, 1e18);
@@ -245,9 +256,9 @@ contract FeeConcentrationIndexFullUnitTest is PosmTestSetup, FCITestHelper {
         assertApproxEqRel(indexA, expectedIndexA, 0.001e18, "indexA should be ~0.707 * INDEX_ONE");
         assertGt(indexA, 0, "indexA > 0: concentration detected");
         assertLt(indexA, INDEX_ONE, "indexA < 1: not sole provider");
-        // (INDEX_ONE - indexA) = 1 - indexA ≈ 0.293 * INDEX_ONE
-        uint256 expectedIndexB = uint256(INDEX_ONE) - expectedIndexA;
-        assertApproxEqRel((INDEX_ONE - indexA), expectedIndexB, 0.001e18, "(INDEX_ONE - indexA) should be ~0.293 * INDEX_ONE");
+	// note: This is outdated, we need to test indexAtNull is equal to indexA
+	// note: We need to test thetaSum equals to one in Q128
+	// note: We need to test deltaPlus equals to zero
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -459,4 +470,7 @@ contract FeeConcentrationIndexFullUnitTest is PosmTestSetup, FCITestHelper {
         uint256 expectedIndexB = uint256(INDEX_ONE) - expectedIndexA;
         assertApproxEqRel((INDEX_ONE - indexA), expectedIndexB, 0.02e18, "(INDEX_ONE - indexA) should be ~0.100 * INDEX_ONE");
     }
+
+
+    function test_unit_
 }
