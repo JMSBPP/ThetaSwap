@@ -85,8 +85,8 @@ class PositionInfo:
     liquidity: int
     add_block: int
     baseline_swap_count: int
-    collected_fee0: int = 0
-    collected_fee1: int = 0
+    collected_fee0: int = 0  # Accumulated by Collect, tracked for ReactVM parity (FCI uses liquidity share)
+    collected_fee1: int = 0  # Same — not used in FCI formula but mirrors on-chain CollectedFees state
 
 
 @dataclass
