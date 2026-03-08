@@ -39,17 +39,20 @@ function processLog(
 
     uint256 sig = topic0(log);
 
+    // Reactive Network replaces the first address(0) arg with the actual RVM ID
+    // before executing the callback on the destination chain.
+
     if (sig == V3_SWAP_SIG) {
         V3SwapData memory data = decodeV3Swap(log);
         emit IReactive.Callback(
             logChainId(log), adapter, CALLBACK_GAS_LIMIT,
-            abi.encodeWithSignature("onV3Swap((address,int24))", data)
+            abi.encodeWithSignature("onV3Swap(address,(address,int24))", address(0), data)
         );
     } else if (sig == V3_MINT_SIG) {
         V3MintData memory data = decodeV3Mint(log);
         emit IReactive.Callback(
             logChainId(log), adapter, CALLBACK_GAS_LIMIT,
-            abi.encodeWithSignature("onV3Mint((address,address,int24,int24,uint128))", data)
+            abi.encodeWithSignature("onV3Mint(address,(address,address,int24,int24,uint128))", address(0), data)
         );
     } else if (sig == V3_COLLECT_SIG) {
         // Accumulate fees in ReactVM state — NO callback
@@ -68,8 +71,8 @@ function processLog(
         emit IReactive.Callback(
             logChainId(log), adapter, CALLBACK_GAS_LIMIT,
             abi.encodeWithSignature(
-                "onV3Burn((address,address,int24,int24,uint128),uint256,uint256)",
-                data, fee0, fee1
+                "onV3Burn(address,(address,address,int24,int24,uint128),uint256,uint256)",
+                address(0), data, fee0, fee1
             )
         );
     }

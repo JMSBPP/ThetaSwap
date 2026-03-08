@@ -31,6 +31,7 @@ contract ReactiveHookAdapter {
     event AuthorizedCallerUpdated(address indexed caller, bool authorized);
 
     error OnlyOwner();
+    error InvalidRvmId();
 
     constructor(address callbackProxy) {
         owner = msg.sender;
@@ -44,16 +45,21 @@ contract ReactiveHookAdapter {
         emit AuthorizedCallerUpdated(caller, authorized);
     }
 
-    function onV3Swap(V3SwapData calldata data) external {
+    // Reactive Network injects the RVM ID as the first argument of every callback.
+    // All on* functions verify msg.sender (callback proxy) and rvmSender (deployer EOA).
+
+    function onV3Swap(address rvmSender, V3SwapData calldata data) external {
         requireAuthorized(msg.sender, authorizedCallers);
+        if (rvmSender != rvmId) revert InvalidRvmId();
         FeeConcentrationIndexStorage storage $ = reactiveFciStorage();
         PoolKey memory key = fromV3Pool(data.pool, address(this));
         PoolId poolId = PoolIdLibrary.toId(key);
         incrementOverlappingRanges($, poolId, data.tick, data.tick);
     }
 
-    function onV3Mint(V3MintData calldata data) external {
+    function onV3Mint(address rvmSender, V3MintData calldata data) external {
         requireAuthorized(msg.sender, authorizedCallers);
+        if (rvmSender != rvmId) revert InvalidRvmId();
         FeeConcentrationIndexStorage storage $ = reactiveFciStorage();
         PoolKey memory key = fromV3Pool(data.pool, address(this));
         PoolId poolId = PoolIdLibrary.toId(key);
@@ -64,8 +70,9 @@ contract ReactiveHookAdapter {
         $.fciState[poolId].incrementPos();
     }
 
-    function onV3Burn(V3BurnData calldata data, uint256 fee0, uint256 fee1) external {
+    function onV3Burn(address rvmSender, V3BurnData calldata data, uint256 fee0, uint256 fee1) external {
         requireAuthorized(msg.sender, authorizedCallers);
+        if (rvmSender != rvmId) revert InvalidRvmId();
         FeeConcentrationIndexStorage storage $ = reactiveFciStorage();
         PoolKey memory key = fromV3Pool(data.pool, address(this));
         PoolId poolId = PoolIdLibrary.toId(key);
