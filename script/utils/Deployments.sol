@@ -153,6 +153,14 @@ function sepoliaV3CallbackRouter() pure returns (address) {
     return 0x1284E9d71a87276d05abD860bD9990dce9Dd721E;
 }
 
+function sepoliaReactiveAdapter() pure returns (address) {
+    return 0x302adeea6BE9a6e22f319f9ee2ABE1Be60Cc4C14;
+}
+
+function sepoliaFreshV3Pool() pure returns (IUniswapV3Pool) {
+    return IUniswapV3Pool(0xcB80f9b60627DF6915cc8D34F5d1EF11617b8Af8);
+}
+
 function resolveV3(uint256 chainId)
     pure
     returns (IUniswapV3Pool pool, address adapter, IFeeConcentrationIndex fci)
