@@ -46,13 +46,11 @@ function processLog(
         uint256 chainId_ = logChainId(log);
         address pool = emitter(log);
 
-        // Inject pre-swap tick from shadow state
+        // Inject pre-swap tick from shadow state.
+        // First swap: no previous tick → use post-swap tick as both (single-tick sweep).
         (int24 prevTick, bool isSet) = getLastTick(chainId_, pool);
-        data.tickBefore = prevTick;
+        data.tickBefore = isSet ? prevTick : data.tick;
         setLastTick(chainId_, pool, data.tick);
-
-        // Skip increment on first swap (no valid tickBefore yet)
-        if (!isSet) return;
 
         emit IReactive.Callback(
             chainId_, adapter, CALLBACK_GAS_LIMIT,

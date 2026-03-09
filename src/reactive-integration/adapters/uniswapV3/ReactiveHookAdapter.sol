@@ -65,7 +65,6 @@ contract ReactiveHookAdapter {
         PoolId poolId = PoolIdLibrary.toId(key);
         int24 tickMin = data.tickBefore < data.tick ? data.tickBefore : data.tick;
         int24 tickMax = data.tickBefore > data.tick ? data.tickBefore : data.tick;
-        if (tickMin == tickMax) return;
         incrementOverlappingRanges($, poolId, tickMin, tickMax);
     }
 
