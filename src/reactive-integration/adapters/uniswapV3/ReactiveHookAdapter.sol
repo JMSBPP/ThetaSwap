@@ -6,16 +6,18 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {V3SwapData, V3MintData, V3BurnData} from "../../types/ReactiveCallbackDataMod.sol";
 import {requireAuthorized} from "./ReactiveAuthMod.sol";
 import {reactiveFciStorage} from "./ReactiveHookAdapterStorageMod.sol";
+import {v3AdapterStorage, V3AdapterStorage} from "./ReactiveHookAdapterStorageMod.sol";
+import {v3FeeGrowthInside0} from "../../libraries/V3FeeGrowthReaderMod.sol";
 import {
     FeeConcentrationIndexStorage,
     registerPosition, setFeeGrowthBaseline, deleteFeeGrowthBaseline,
+    getFeeGrowthBaseline,
     incrementOverlappingRanges
 } from "../../../fee-concentration-index/modules/FeeConcentrationIndexStorageMod.sol";
 import {TickRange, fromTicks} from "../../../fee-concentration-index/types/TickRangeMod.sol";
-import {FeeShareRatio} from "../../../fee-concentration-index/types/FeeShareRatioMod.sol";
+import {FeeShareRatio, fromFeeGrowthDelta} from "../../../fee-concentration-index/types/FeeShareRatioMod.sol";
 import {SwapCount} from "../../../fee-concentration-index/types/SwapCountMod.sol";
 import {BlockCount} from "../../../fee-concentration-index/types/BlockCountMod.sol";
-import {SyntheticFeeGrowth, fromBurnAmount, toFeeShareRatio} from "../../types/SyntheticFeeGrowthMod.sol";
 import {v3PositionKey} from "../../types/CollectedFeesMod.sol";
 import {fromV3Pool} from "../../libraries/PoolKeyExtMod.sol";
 
@@ -23,11 +25,12 @@ import {fromV3Pool} from "../../libraries/PoolKeyExtMod.sol";
 // translates V3 event data into FCI state updates on the reactive storage slot.
 // Thin contract shell — all logic in Mod files. SCOP compliant (no is/library/modifier).
 contract ReactiveHookAdapter {
-    address immutable rvmId;
+    address public rvmId;
     address immutable owner;
     mapping(address => bool) public authorizedCallers;
 
     event AuthorizedCallerUpdated(address indexed caller, bool authorized);
+    event RvmIdUpdated(address indexed oldRvmId, address indexed newRvmId);
 
     error OnlyOwner();
     error InvalidRvmId();
@@ -36,6 +39,13 @@ contract ReactiveHookAdapter {
         owner = msg.sender;
         rvmId = msg.sender;
         authorizedCallers[callbackProxy] = true;
+    }
+
+    function setRvmId(address rvmId_) external {
+        if (msg.sender != owner) revert OnlyOwner();
+        address old = rvmId;
+        rvmId = rvmId_;
+        emit RvmIdUpdated(old, rvmId_);
     }
 
     function setAuthorized(address caller, bool authorized) external {
@@ -65,11 +75,19 @@ contract ReactiveHookAdapter {
         bytes32 posKey = v3PositionKey(data.owner, data.tickLower, data.tickUpper);
         TickRange rk = fromTicks(data.tickLower, data.tickUpper);
         registerPosition($, poolId, rk, posKey, data.tickLower, data.tickUpper, data.liquidity);
-        setFeeGrowthBaseline($, poolId, posKey, 0);
+
+        // Snapshot feeGrowthInside0 from V3 pool at mint time.
+        // This is the baseline for computing the fee delta on burn.
+        uint256 feeGrowthNow0 = v3FeeGrowthInside0(data.pool, data.tickLower, data.tickUpper);
+        V3AdapterStorage storage v3$ = v3AdapterStorage();
+        v3$.feeGrowthSnapshot0[poolId][posKey] = feeGrowthNow0;
+
+        // Also set FCI baseline to current feeGrowthInside (used by fromFeeGrowthDelta)
+        setFeeGrowthBaseline($, poolId, posKey, feeGrowthNow0);
         $.fciState[poolId].incrementPos();
     }
 
-    function onV3Burn(address rvmSender, V3BurnData calldata data, uint256 fee0, uint256 fee1) external {
+    function onV3Burn(address rvmSender, V3BurnData calldata data) external {
         requireAuthorized(msg.sender, authorizedCallers);
         if (rvmSender != rvmId) revert InvalidRvmId();
         FeeConcentrationIndexStorage storage $ = reactiveFciStorage();
@@ -81,13 +99,27 @@ contract ReactiveHookAdapter {
             $.registries[poolId].deregister(posKey, data.liquidity);
 
         if (!swapLifetime.isZero()) {
-            SyntheticFeeGrowth posDelta = fromBurnAmount(fee0, data.liquidity);
-            SyntheticFeeGrowth rangeDelta = fromBurnAmount(fee0, totalRangeLiq);
-            FeeShareRatio xk = toFeeShareRatio(posDelta, rangeDelta);
+            // Read current feeGrowthInside0 live from V3 pool (same chain).
+            uint256 rangeFeeGrowthNow0 = v3FeeGrowthInside0(data.pool, data.tickLower, data.tickUpper);
+            // Position's snapshot at mint time (stored by onV3Mint).
+            V3AdapterStorage storage v3$ = v3AdapterStorage();
+            uint256 positionFeeLast0 = v3$.feeGrowthSnapshot0[poolId][posKey];
+            // FCI baseline (set to same value as snapshot on mint).
+            uint256 baseline0 = getFeeGrowthBaseline($, poolId, posKey);
+
+            FeeShareRatio xk = fromFeeGrowthDelta(
+                rangeFeeGrowthNow0,
+                positionFeeLast0,
+                baseline0,
+                data.liquidity,
+                totalRangeLiq
+            );
             uint256 xSquaredQ128 = xk.square();
             $.fciState[poolId].addTerm(blockLifetime, xSquaredQ128);
         }
 
+        // Clean up storage
+        delete v3AdapterStorage().feeGrowthSnapshot0[poolId][posKey];
         $.fciState[poolId].decrementPos();
         deleteFeeGrowthBaseline($, poolId, posKey);
     }
@@ -135,6 +167,24 @@ contract ReactiveHookAdapter {
         PoolId poolId = PoolIdLibrary.toId(key);
         thetaSum_ = $.fciState[poolId].thetaSum;
     }
+
+    // ── IPayer (callback proxy gas payment — no `is` per SCOP) ──
+
+    error InsufficientFunds();
+    error TransferFailed();
+
+    // Called by the callback proxy to collect gas costs for executing callbacks.
+    function pay(uint256 amount) external {
+        requireAuthorized(msg.sender, authorizedCallers);
+        if (address(this).balance < amount) revert InsufficientFunds();
+        if (amount > 0) {
+            (bool success,) = payable(msg.sender).call{value: amount}("");
+            if (!success) revert TransferFailed();
+        }
+    }
+
+    // Accept ETH/SepETH funding for callback gas payments.
+    receive() external payable {}
 
     // ── IERC165 ──
 
