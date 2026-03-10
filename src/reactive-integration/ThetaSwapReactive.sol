@@ -6,6 +6,8 @@ import {ISubscriptionService} from "reactive-lib/interfaces/ISubscriptionService
 import {processLog} from "./modules/ReactLogicMod.sol";
 import {subscribeV3Pool, unsubscribeV3Pool, REACTIVE_IGNORE} from "./modules/SubscriptionMod.sol";
 import {coverDebt, depositToSystem} from "./modules/DebtMod.sol";
+import {requireVM} from "./modules/ReactVMMod.sol";
+import {requireSolvency} from "./libraries/DebtLib.sol";
 
 // Self-sync events — emitted on RN instance, consumed by ReactVM
 event PoolRegistered(uint256 indexed chainId, address indexed pool);
@@ -13,6 +15,21 @@ event PoolUnregistered(uint256 indexed chainId, address indexed pool);
 
 // Thin shell — all logic lives in Mod files.
 // Dual-instance: RN manages subscriptions, ReactVM processes events.
+
+// note: This is to be named ReactiveShell
+// --> Uses OwnerMod
+// --> receives a callback (adapter) --> CallbackMod or lib
+// --> receivs a service --> SystemServiceMod or lib
+// --> VM --> ReactVM (type, lib,. mod)
+//                     
+//                        -- > ReactVMSubscriptionsLib  
+//                       / 
+// --> SubscriptionsMod         <- require ReactVM
+//                       \
+//                        --> ReactiveNetworkSubscriptionsLib
+// --> DebtMod
+
+// on uniswapV3 --> ThetaSwapReactiveFacet
 contract ThetaSwapReactive {
     address immutable owner;
     address immutable adapter;
@@ -87,4 +104,25 @@ contract ThetaSwapReactive {
     receive() external payable {
         coverDebt(address(this));
     }
+}
+
+contract ReactiveShell {
+    ISubscriptionService immutable service;
+
+    constructor(address adapter_, address payable service_) payable {}
+
+    modifier onlyVM() {
+        requireVM();
+        _;
+    }
+    modifier debtFree() {
+        requireSolvency(address(this));
+        _;
+    }
+    function react(IReactive.LogRecord calldata log) external onlyVM() debtFree() {
+
+    }
+
+    receive() external payable { coverDebt(address(this)); }
+
 }
