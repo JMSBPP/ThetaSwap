@@ -31,6 +31,7 @@ remappings = [
     "foundational-hooks/=lib/typed-uniswap-v4/lib/foundational-hooks/",
     "@fci-token-vault/=src/fci-token-vault/",
     "solady/=lib/solady/src/",
+    "compose/=lib/hook-bazaar/contracts/lib/Compose/src/",
     "@fee-concentration-index/=src/fee-concentration-index/",
     "@reactive-integration/=src/reactive-integration/",
     "@theta-swap-insurance/=src/theta-swap-insurance/",
