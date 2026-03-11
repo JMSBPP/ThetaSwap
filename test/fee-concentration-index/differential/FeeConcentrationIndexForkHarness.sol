@@ -9,18 +9,18 @@ import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeS
 import {SwapParams, ModifyLiquidityParams} from "v4-core/src/types/PoolOperation.sol";
 import {Position} from "v4-core/src/libraries/Position.sol";
 
-import {FeeConcentrationIndex} from "../../../src/fee-concentration-index/FeeConcentrationIndex.sol";
-import {FeeConcentrationIndexStorage, fciStorage} from "../../../src/fee-concentration-index/modules/FeeConcentrationIndexStorageMod.sol";
-import {TickRange, fromTicks} from "../../../src/fee-concentration-index/types/TickRangeMod.sol";
-import {FeeShareRatio, fromFeeGrowth} from "../../../src/fee-concentration-index/types/FeeShareRatioMod.sol";
-import {SwapCount} from "../../../src/fee-concentration-index/types/SwapCountMod.sol";
-import {BlockCount} from "../../../src/fee-concentration-index/types/BlockCountMod.sol";
+import {FeeConcentrationIndex} from "@fee-concentration-index/FeeConcentrationIndex.sol";
+import {FeeConcentrationIndexStorage, fciStorage} from "@fee-concentration-index/modules/FeeConcentrationIndexStorageMod.sol";
+import {TickRange, fromTicks} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeMod.sol";
+import {FeeShareRatio, fromFeeGrowth} from "typed-uniswap-v4/fee-concentration-index/types/FeeShareRatioMod.sol";
+import {SwapCount} from "typed-uniswap-v4/fee-concentration-index/types/SwapCountMod.sol";
+import {BlockCount} from "typed-uniswap-v4/fee-concentration-index/types/BlockCountMod.sol";
 import {
     registerPosition, setFeeGrowthBaseline, getFeeGrowthBaseline, deleteFeeGrowthBaseline,
     deregisterPosition, addStateTerm, incrementPosCount, decrementPosCount,
     incrementOverlappingRanges
 } from "../../../src/reactive-integration/modules/FeeConcentrationIndexStorageMultiProtocolReactiveExtMod.sol";
-import {sortTicks} from "../../../src/libraries/HookUtilsMod.sol";
+import {sortTicks} from "@libraries/HookUtilsMod.sol";
 
 /// @title FCI Differential Test Harness
 /// @notice Replays V4 events without going through PoolManager.

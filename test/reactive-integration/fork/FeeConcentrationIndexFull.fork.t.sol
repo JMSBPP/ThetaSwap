@@ -3,8 +3,8 @@ pragma solidity ^0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {FeeConcentrationIndexBuilderScript} from
-    "../../../script/reactive-integration/FeeConcentrationIndexBuilder.s.sol";
-import {SEPOLIA} from "../../../script/utils/Deployments.sol";
+    "@foundry-script/reactive-integration/FeeConcentrationIndexBuilder.s.sol";
+import {SEPOLIA} from "@foundry-script/utils/Deployments.sol";
 
 // Maps chain ID → foundry.toml [rpc_endpoints] alias.
 function rpcAlias(uint256 chainId) pure returns (string memory) {

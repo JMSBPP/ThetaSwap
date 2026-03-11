@@ -5,8 +5,8 @@ import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {SwapParams, ModifyLiquidityParams} from "v4-core/src/types/PoolOperation.sol";
 
-import {V3SwapData, V3MintData, V3BurnData, V3CollectData} from "../../types/ReactiveCallbackDataMod.sol";
-import {fromV3Pool} from "../../libraries/PoolKeyExtMod.sol";
+import {V3SwapData, V3MintData, V3BurnData, V3CollectData} from "reactive-hooks/types/ReactiveCallbackDataMod.sol";
+import {fromV3Pool} from "reactive-hooks/libraries/PoolKeyExtMod.sol";
 
 // Translates V3 event data into V4 hook calldata.
 // The reactive subscription contract calls these to build arguments

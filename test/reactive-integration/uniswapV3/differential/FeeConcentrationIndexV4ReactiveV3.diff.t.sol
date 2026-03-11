@@ -7,19 +7,19 @@ import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {Currency} from "v4-core/src/types/Currency.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
-import {Accounts, initAccounts} from "../../../../script/types/Accounts.sol";
+import {Accounts, initAccounts} from "@foundry-script/types/Accounts.sol";
 
 import {FeeConcentrationIndexBuilderScript} from
-    "../../../../script/reactive-integration/FeeConcentrationIndexBuilder.s.sol";
+    "@foundry-script/reactive-integration/FeeConcentrationIndexBuilder.s.sol";
 import {FeeConcentrationIndex} from
-    "../../../../src/fee-concentration-index/FeeConcentrationIndex.sol";
+    "@fee-concentration-index/FeeConcentrationIndex.sol";
 import {ReactiveHookAdapter} from
-    "../../../../src/reactive-integration/adapters/uniswapV3/ReactiveHookAdapter.sol";
+    "@reactive-integration/adapters/uniswapV3/ReactiveHookAdapter.sol";
 import {CallbackProxy} from
-    "../../../../src/reactive-integration/types/CallbackProxy.sol";
+    "reactive-hooks/types/CallbackProxy.sol";
 import {getCallbackProxy} from
-    "../../../../src/reactive-integration/libraries/CallbackProxyRegistryLib.sol";
-import {ethSepoliaPoolManager} from "../../../../script/utils/Deployments.sol";
+    "reactive-hooks/libraries/CallbackProxyRegistryLib.sol";
+import {ethSepoliaPoolManager} from "@foundry-script/utils/Deployments.sol";
 
 /// @title FCI Differential Test — V4 Native vs V3 Reactive
 /// @notice Three-phase differential test:

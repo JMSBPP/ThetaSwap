@@ -4,8 +4,8 @@ pragma solidity ^0.8.26;
 import {Test, console2} from "forge-std/Test.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {v3FeeGrowthInside0, v3PositionFeeGrowthLast0} from
-    "../../../src/reactive-integration/libraries/V3FeeGrowthReaderMod.sol";
-import {sepoliaFreshV3Pool} from "../../../script/utils/Deployments.sol";
+    "reactive-hooks/libraries/V3FeeGrowthReaderMod.sol";
+import {sepoliaFreshV3Pool} from "@foundry-script/utils/Deployments.sol";
 
 /// @title V3FeeGrowthReader Fork Test
 /// @notice Validates that v3FeeGrowthInside0() matches V3 pool's internal computation.

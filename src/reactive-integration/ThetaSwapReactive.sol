@@ -3,11 +3,11 @@ pragma solidity ^0.8.26;
 
 import {IReactive} from "reactive-lib/interfaces/IReactive.sol";
 import {ISubscriptionService} from "reactive-lib/interfaces/ISubscriptionService.sol";
-import {processLog} from "./modules/ReactLogicMod.sol";
-import {subscribeV3Pool, unsubscribeV3Pool, REACTIVE_IGNORE} from "./modules/SubscriptionMod.sol";
-import {coverDebt, depositToSystem} from "./modules/DebtMod.sol";
-import {requireVM} from "./modules/ReactVMMod.sol";
-import {requireSolvency} from "./libraries/DebtLib.sol";
+import {processLog} from "reactive-hooks/modules/ReactLogicMod.sol";
+import {subscribeV3Pool, unsubscribeV3Pool, REACTIVE_IGNORE} from "reactive-hooks/modules/SubscriptionMod.sol";
+import {coverDebt, depositToSystem} from "reactive-hooks/modules/DebtMod.sol";
+import {requireVM} from "reactive-hooks/modules/ReactVMMod.sol";
+import {requireSolvency} from "reactive-hooks/libraries/DebtLib.sol";
 
 // Self-sync events — emitted on RN instance, consumed by ReactVM
 event PoolRegistered(uint256 indexed chainId, address indexed pool);

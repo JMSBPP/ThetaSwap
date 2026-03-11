@@ -25,7 +25,7 @@ function fromV3Pool(
     IUniswapV3Pool pool,
     address adapter
 ) view returns (PoolKey memory) {
-    address token0 = pool.token0();
+ address token0 = pool.token0();
     address token1 = pool.token1();
     uint24 fee = pool.fee();
     int24 tickSpacing = pool.tickSpacing();

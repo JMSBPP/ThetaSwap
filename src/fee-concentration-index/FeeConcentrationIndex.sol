@@ -8,7 +8,7 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {SwapParams, ModifyLiquidityParams} from "v4-core/src/types/PoolOperation.sol";
-import {TickRange, fromTicks} from "./types/TickRangeMod.sol";
+import {TickRange, fromTicks} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeMod.sol";
 import {derivePoolAndPosition, sortTicks} from "../libraries/HookUtilsMod.sol";
 import {
     FeeConcentrationIndexStorage, fciStorage, reactiveFciStorage, _poolManager
@@ -23,16 +23,16 @@ import {
     incrementOverlappingRanges
 } from "../reactive-integration/modules/FeeConcentrationIndexStorageMultiProtocolReactiveExtMod.sol";
 import {CalldataReader, CalldataReaderLib} from "angstrom/src/types/CalldataReader.sol";
-import {TickRangeRegistryLib} from "./types/TickRangeRegistryMod.sol";
+import {TickRangeRegistryLib} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeRegistryMod.sol";
 import {
     getCurrentTick,
     getPositionFeeGrowthInsideLast0,
     getFeeGrowthInside0
 } from "../reactive-integration/libraries/FeeGrowthReaderExt.sol";
-import {FeeShareRatio, fromFeeGrowth, fromFeeGrowthDelta} from "./types/FeeShareRatioMod.sol";
-import {FeeConcentrationState} from "./types/FeeConcentrationStateMod.sol";
-import {SwapCount} from "./types/SwapCountMod.sol";
-import {BlockCount} from "./types/BlockCountMod.sol";
+import {FeeShareRatio, fromFeeGrowth, fromFeeGrowthDelta} from "typed-uniswap-v4/fee-concentration-index/types/FeeShareRatioMod.sol";
+import {FeeConcentrationState} from "typed-uniswap-v4/fee-concentration-index/types/FeeConcentrationStateMod.sol";
+import {SwapCount} from "typed-uniswap-v4/fee-concentration-index/types/SwapCountMod.sol";
+import {BlockCount} from "typed-uniswap-v4/fee-concentration-index/types/BlockCountMod.sol";
 import {IFeeConcentrationIndex} from "./interfaces/IFeeConcentrationIndex.sol";
 import {IERC165} from "forge-std/interfaces/IERC165.sol";
 

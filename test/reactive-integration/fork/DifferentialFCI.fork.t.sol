@@ -19,7 +19,7 @@ import {Planner, Plan} from "@uniswap/v4-periphery/test/shared/Planner.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
-import {FeeConcentrationIndex} from "../../../src/fee-concentration-index/FeeConcentrationIndex.sol";
+import {FeeConcentrationIndex} from "@fee-concentration-index/FeeConcentrationIndex.sol";
 
 /// @title DifferentialFCI Fork Test
 /// @notice Dry-runs the full deploy + build pipeline on forked Unichain Sepolia state.

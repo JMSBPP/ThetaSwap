@@ -6,10 +6,10 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 import {
     isSelfSync, topic0, emitter, logChainId,
     decodeTopic1AsAddress, decodeTopic2AsInt24, decodeTopic3AsInt24
-} from "../../types/LogRecordExtMod.sol";
+} from "reactive-hooks/types/LogRecordExtMod.sol";
 import {V3SwapData, V3MintData, V3BurnData, V3CollectData} from "../types/UniswapV3CallbackData.sol";
 import {TickShadow, getTick, setTick} from "../types/TickShadow.sol";
-import {RvmId, rvmIdPlaceHolder, toAddress} from "../../types/RvmId.sol";
+import {RvmId, rvmIdPlaceHolder, toAddress} from "reactive-hooks/types/RvmId.sol";
 
 // keccak256("Swap(address,address,int256,int256,uint160,uint128,int24)")
 uint256 constant V3_SWAP_SIG = 0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67;

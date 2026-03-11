@@ -2,7 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {PoolId} from "v4-core/src/types/PoolId.sol";
-import {TickRange} from "../../fee-concentration-index/types/TickRangeMod.sol";
+import {TickRange} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeMod.sol";
 import {
     FeeConcentrationIndexStorage,
     fciStorage, reactiveFciStorage,
@@ -13,8 +13,8 @@ import {
     setFeeGrowthBaseline, getFeeGrowthBaseline, deleteFeeGrowthBaseline
 } from "../../fee-concentration-index/modules/FeeConcentrationIndexStorageMod.sol";
 import {isUniswapV3Reactive} from "../uniswapV3/types/HookDataFlagsMod.sol";
-import {SwapCount} from "../../fee-concentration-index/types/SwapCountMod.sol";
-import {BlockCount} from "../../fee-concentration-index/types/BlockCountMod.sol";
+import {SwapCount} from "typed-uniswap-v4/fee-concentration-index/types/SwapCountMod.sol";
+import {BlockCount} from "typed-uniswap-v4/fee-concentration-index/types/BlockCountMod.sol";
 
 function registerPosition(
     bytes calldata hookData,

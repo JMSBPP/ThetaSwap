@@ -3,7 +3,7 @@ pragma solidity ^0.8.26;
 
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
-import {V3SwapData, V3MintData, V3BurnData} from "../../types/ReactiveCallbackDataMod.sol";
+import {V3SwapData, V3MintData, V3BurnData} from "reactive-hooks/types/ReactiveCallbackDataMod.sol";
 import {requireAuthorized} from "./ReactiveAuthMod.sol";
 import {reactiveFciStorage} from "./ReactiveHookAdapterStorageMod.sol";
 import {
@@ -11,12 +11,12 @@ import {
     registerPosition,
     incrementOverlappingRanges
 } from "../../../fee-concentration-index/modules/FeeConcentrationIndexStorageMod.sol";
-import {TickRange, fromTicks} from "../../../fee-concentration-index/types/TickRangeMod.sol";
-import {FeeShareRatio, fromFeeGrowth} from "../../../fee-concentration-index/types/FeeShareRatioMod.sol";
-import {SwapCount} from "../../../fee-concentration-index/types/SwapCountMod.sol";
-import {BlockCount} from "../../../fee-concentration-index/types/BlockCountMod.sol";
-import {v3PositionKey} from "../../types/CollectedFeesMod.sol";
-import {fromV3Pool} from "../../libraries/PoolKeyExtMod.sol";
+import {TickRange, fromTicks} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeMod.sol";
+import {FeeShareRatio, fromFeeGrowth} from "typed-uniswap-v4/fee-concentration-index/types/FeeShareRatioMod.sol";
+import {SwapCount} from "typed-uniswap-v4/fee-concentration-index/types/SwapCountMod.sol";
+import {BlockCount} from "typed-uniswap-v4/fee-concentration-index/types/BlockCountMod.sol";
+import {v3PositionKey} from "reactive-hooks/types/CollectedFeesMod.sol";
+import {fromV3Pool} from "reactive-hooks/libraries/PoolKeyExtMod.sol";
 
 // Destination-chain adapter: receives callbacks from Reactive Network callback proxy,
 // translates V3 event data into FCI state updates on the reactive storage slot.

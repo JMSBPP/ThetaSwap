@@ -9,7 +9,7 @@ import {Currency} from "v4-core/src/types/Currency.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
-import {fromV3Pool, toV3Pool, toPoolId} from "../../../src/reactive-integration/libraries/PoolKeyExtMod.sol";
+import {fromV3Pool, toV3Pool, toPoolId} from "reactive-hooks/libraries/PoolKeyExtMod.sol";
 
 // Minimal mock returning configurable V3 pool properties.
 contract MockV3Pool {
