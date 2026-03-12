@@ -37,6 +37,9 @@ import "@foundry-script/utils/Constants.sol";
 
 import {FciTokenVaultHarness} from "../helpers/FciTokenVaultHarness.sol";
 import {LONG, SHORT} from "@fci-token-vault/modules/FciTokenVaultMod.sol";
+import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
+import {PoolSwapTest} from "v4-core/src/test/PoolSwapTest.sol";
+import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 
 contract JitGameWelfareComparisonTest is PosmTestSetup, FCITestHelper {
     using PoolIdLibrary for PoolKey;
@@ -169,6 +172,28 @@ contract JitGameWelfareComparisonTest is PosmTestSetup, FCITestHelper {
         return gameResult.welfare;
     }
 
+    /// @dev Push the pool price back toward 1:1 by swapping in the opposite direction.
+    /// Each _runGame sub-game does zeroForOne=true swaps that push the price down.
+    /// This helper executes a matching reverse swap to approximately restore the price.
+    function _rebalancePool() internal {
+        _rebalancePool(3);
+    }
+
+    function _rebalancePool(uint256 rounds) internal {
+        uint256 rebalanceAmount = rounds * TRADE_SIZE;
+        PoolSwapTest router = PoolSwapTest(address(swapRouter));
+        router.swap(
+            key,
+            SwapParams({
+                zeroForOne: false,
+                amountSpecified: int256(rebalanceAmount),
+                sqrtPriceLimitX96: TickMath.MAX_SQRT_PRICE - 1
+            }),
+            PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false}),
+            ""
+        );
+    }
+
     // ── Baseline Scenarios ──
 
     function test_B1_equilibrium_no_jit() public {
@@ -250,5 +275,78 @@ contract JitGameWelfareComparisonTest is PosmTestSetup, FCITestHelper {
         assertGt(w.longPayout, 0, "W4: LONG should be positive -- late JIT harm");
         assertGt(w.hedgedWelfare, w.unhedgedWelfare, "W4: hedged outperforms unhedged");
         assertEq(w.longPayout + w.shortPayout, HEDGE_AMOUNT, "W4: conservation");
+    }
+
+    // ── Intensity Sweep ──
+
+    function test_W2_jit_intensity_sweep() public {
+        console.log("=== W2: JIT INTENSITY SWEEP ===");
+        bool[] memory schedule = new bool[](3);
+        schedule[0] = true;
+        schedule[1] = true;
+        schedule[2] = true;
+
+        // Use capitals in the non-saturating range (below ~11x where payout caps at 100%).
+        // 9x → ~68%, so 9.5x and 10x should produce monotonically higher payouts.
+        console.log("--- 9x capital ---");
+        WelfareResult memory wLo = _runGame(3, 9e18, schedule);
+        console.log("");
+
+        // Rebalance pool price for next sub-game
+        _rebalancePool();
+
+        console.log("--- 9.5x capital ---");
+        WelfareResult memory wMid = _runGame(3, 95e17, schedule);
+        console.log("");
+
+        // Rebalance pool price for next sub-game
+        _rebalancePool();
+
+        console.log("--- 10x capital ---");
+        WelfareResult memory wHi = _runGame(3, 10e18, schedule);
+
+        // All should be hedge-profitable
+        assertGt(wLo.longPayout, 0, "W2-lo: LONG > 0");
+        assertGt(wMid.longPayout, 0, "W2-mid: LONG > 0");
+        assertGt(wHi.longPayout, 0, "W2-hi: LONG > 0");
+
+        // Monotonic: 10x > 9.5x > 9x
+        assertGt(wHi.hedgeValue, wMid.hedgeValue, "W2: 10x hedge value > 9.5x");
+        assertGt(wMid.hedgeValue, wLo.hedgeValue, "W2: 9.5x hedge value > 9x");
+
+        // Conservation
+        assertEq(wLo.longPayout + wLo.shortPayout, HEDGE_AMOUNT, "W2-lo: conservation");
+        assertEq(wMid.longPayout + wMid.shortPayout, HEDGE_AMOUNT, "W2-mid: conservation");
+        assertEq(wHi.longPayout + wHi.shortPayout, HEDGE_AMOUNT, "W2-hi: conservation");
+    }
+
+    // ── Cross-Scenario Assertions ──
+
+    function test_W4_beats_W3_less_decay() public {
+        console.log("=== CROSS: W4 vs W3 (late JIT > early JIT) ===");
+
+        // W3: early JIT [Y,Y,N,N,N]
+        bool[] memory scheduleW3 = new bool[](5);
+        scheduleW3[0] = true;
+        scheduleW3[1] = true;
+
+        console.log("--- W3: Early JIT ---");
+        WelfareResult memory w3 = _runGame(5, 9e18, scheduleW3);
+        console.log("");
+
+        // W4: late JIT [N,N,N,Y,Y]
+        bool[] memory scheduleW4 = new bool[](5);
+        scheduleW4[3] = true;
+        scheduleW4[4] = true;
+
+        // Rebalance pool price before second sub-game (5 rounds of zeroForOne swaps)
+        _rebalancePool(5);
+
+        console.log("--- W4: Late JIT ---");
+        WelfareResult memory w4 = _runGame(5, 9e18, scheduleW4);
+
+        // Late JIT = less decay before settlement = higher payout
+        assertGt(w4.hedgeValue, w3.hedgeValue, "W4 hedge value > W3: less decay");
+        assertGt(w4.longPayout, w3.longPayout, "W4 LONG payout > W3");
     }
 }
