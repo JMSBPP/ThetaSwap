@@ -9,6 +9,7 @@ import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {Currency} from "v4-core/src/types/Currency.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
+import {V4_ADAPTER_SLOT} from "@protocol-adapter/storage/ProtocolAdapterStorage.sol";
 
 contract FciTokenVaultModTest is Test {
     CustodianHarness vault;
@@ -19,9 +20,10 @@ contract FciTokenVaultModTest is Test {
         vault = new CustodianHarness();
         collateral = new MockERC20("Collateral", "COL", 18);
 
-        vault.harness_initVault(
-            uint160(SqrtPriceLibrary.Q96), // strike = 1.0
-            block.timestamp + 30 days,      // expiry
+        vault.harness_initAdapter(
+            V4_ADAPTER_SLOT,
+            address(0),
+            IHooks(address(0)),
             PoolKey({
                 currency0: Currency.wrap(address(0)),
                 currency1: Currency.wrap(address(0)),
@@ -29,8 +31,13 @@ contract FciTokenVaultModTest is Test {
                 tickSpacing: 0,
                 hooks: IHooks(address(0))
             }),
-            false,                          // reactive
-            address(collateral)             // collateralToken
+            false
+        );
+        vault.harness_initVault(
+            uint160(SqrtPriceLibrary.Q96),
+            block.timestamp + 30 days,
+            V4_ADAPTER_SLOT,
+            address(collateral)
         );
 
         // Fund alice and approve vault
