@@ -26,6 +26,13 @@ import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {SqrtPriceLibrary} from "foundational-hooks/src/libraries/SqrtPriceLibrary.sol";
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
+import {
+    ProtocolAdapterStorage,
+    protocolAdapterStorage,
+    V4_ADAPTER_SLOT
+} from "@protocol-adapter/storage/ProtocolAdapterStorage.sol";
+import {initializeAdapter} from "@protocol-adapter/modules/ProtocolAdapterMod.sol";
+import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 
 /// @dev Test harness composing both new modules. Epoch-only: no decay.
 contract CustodianHarness {
@@ -89,8 +96,7 @@ contract CustodianHarness {
     function harness_initVault(
         uint160 sqrtPriceStrike,
         uint256 expiry,
-        PoolKey calldata poolKey,
-        bool reactive,
+        bytes32 adapterSlot,
         address collateralToken
     ) external {
         CustodianStorage storage cs = getCustodianStorage();
@@ -99,19 +105,25 @@ contract CustodianHarness {
         OraclePayoffStorage storage os = getOraclePayoffStorage();
         os.sqrtPriceStrike = sqrtPriceStrike;
         os.expiry = expiry;
-        os.poolKey = poolKey;
-        os.reactive = reactive;
+        os.adapterSlot = adapterSlot;
+    }
+
+    /// @dev Initialize the protocol adapter storage for this harness.
+    function harness_initAdapter(
+        bytes32 slot,
+        address protocolState,
+        IHooks fciEntryPoint,
+        PoolKey calldata poolKey,
+        bool reactive
+    ) external {
+        initializeAdapter(slot, protocolState, fciEntryPoint, poolKey, reactive);
     }
 
     function harness_setHWM(uint160 hwm) external {
         getOraclePayoffStorage().sqrtPriceHWM = hwm;
     }
 
-    function harness_getPoolKey() external view returns (PoolKey memory) {
-        return getOraclePayoffStorage().poolKey;
-    }
-
-    function harness_getReactive() external view returns (bool) {
-        return getOraclePayoffStorage().reactive;
+    function harness_getAdapterSlot() external view returns (bytes32) {
+        return getOraclePayoffStorage().adapterSlot;
     }
 }

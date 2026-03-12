@@ -25,6 +25,7 @@ import {executeSwapWithAmount} from "@foundry-script/simulation/JitGame.sol";
 import "@foundry-script/utils/Constants.sol";
 
 import {FciTokenVaultHarness} from "../helpers/FciTokenVaultHarness.sol";
+import {V4_ADAPTER_SLOT} from "@protocol-adapter/storage/ProtocolAdapterStorage.sol";
 import {LONG, SHORT} from "@fci-token-vault/modules/CollateralCustodianMod.sol";
 import {lookbackPayoffX96} from "@fci-token-vault/libraries/SqrtPriceLookbackPayoffX96Lib.sol";
 import {IFeeConcentrationIndex} from "@fee-concentration-index/interfaces/IFeeConcentrationIndex.sol";
@@ -109,11 +110,17 @@ contract HedgedVsUnhedgedTest is PosmTestSetup, FCITestHelper {
         uint160 strikePrice = SqrtPriceLibrary.fractionToSqrtPriceX96(80, 100);
         // Expiry 5 days: 3 rounds × 1 day = 3 days of pokes.
         // Epoch-only: no decay. HWM is pure high-water mark.
+        vault.harness_initAdapter(
+            V4_ADAPTER_SLOT,
+            address(manager),
+            key.hooks,
+            key,
+            false
+        );
         vault.harness_initVault(
             strikePrice,
             block.timestamp + 5 days,
-            key,
-            false,
+            V4_ADAPTER_SLOT,
             Currency.unwrap(currency1)
         );
 
@@ -340,9 +347,16 @@ contract HedgedVsUnhedgedTest is PosmTestSetup, FCITestHelper {
         // Deploy a SEPARATE vault with very high strike (Δ* ≈ 0.99)
         FciTokenVaultHarness highStrikeVault = new FciTokenVaultHarness();
         uint160 highStrike = SqrtPriceLibrary.fractionToSqrtPriceX96(99, 1);
+        highStrikeVault.harness_initAdapter(
+            V4_ADAPTER_SLOT,
+            address(manager),
+            key.hooks,
+            key,
+            false
+        );
         highStrikeVault.harness_initVault(
             highStrike, block.timestamp + 5 days,
-            key, false, Currency.unwrap(currency1)
+            V4_ADAPTER_SLOT, Currency.unwrap(currency1)
         );
         // Hedged PLP funds the high-strike vault from OWN capital
         vm.startPrank(hedgedPlpAddr);

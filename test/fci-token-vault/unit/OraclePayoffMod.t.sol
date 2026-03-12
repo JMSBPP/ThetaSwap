@@ -32,10 +32,11 @@ contract OraclePayoffModCaller {
     function initCustodianStorage(address collateral) external {
         getCustodianStorage().collateralToken = collateral;
     }
-    function initOracleStorage(uint160 strike, uint256 expiry) external {
+    function initOracleStorage(uint160 strike, uint256 expiry, bytes32 adapterSlot) external {
         OraclePayoffStorage storage os = getOraclePayoffStorage();
         os.sqrtPriceStrike = strike;
         os.expiry = expiry;
+        os.adapterSlot = adapterSlot;
     }
     function setHWM(uint160 hwm) external {
         getOraclePayoffStorage().sqrtPriceHWM = hwm;
@@ -63,7 +64,8 @@ contract OraclePayoffModTest is Test {
         caller.initCustodianStorage(address(1));
         caller.initOracleStorage(
             uint160(SqrtPriceLibrary.Q96), // strike = 1.0
-            block.timestamp + 30 days       // expiry
+            block.timestamp + 30 days,      // expiry
+            bytes32(0)
         );
     }
 
