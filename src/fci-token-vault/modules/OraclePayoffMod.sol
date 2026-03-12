@@ -26,7 +26,11 @@ import {
     deltaPlusToSqrtPriceX96
 } from "@fci-token-vault/libraries/SqrtPriceLookbackPayoffX96Lib.sol";
 
-import {IFeeConcentrationIndex} from "@fee-concentration-index/interfaces/IFeeConcentrationIndex.sol";
+import {
+    ProtocolAdapterStorage,
+    protocolAdapterStorage
+} from "@protocol-adapter/storage/ProtocolAdapterStorage.sol";
+import {getDeltaPlusEpoch} from "@protocol-adapter/libraries/ProtocolAdapterLib.sol";
 import {SqrtPriceLibrary} from "foundational-hooks/src/libraries/SqrtPriceLibrary.sol";
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
@@ -44,8 +48,8 @@ function oraclePoke() returns (uint160 currentSqrtPrice) {
     OraclePayoffStorage storage os = getOraclePayoffStorage();
     if (os.settled) revert VaultAlreadySettledPoke();
 
-    uint128 deltaPlus = IFeeConcentrationIndex(address(os.poolKey.hooks))
-        .getDeltaPlusEpoch(os.poolKey, os.reactive);
+    ProtocolAdapterStorage storage adapter = protocolAdapterStorage(os.adapterSlot);
+    uint128 deltaPlus = getDeltaPlusEpoch(adapter);
 
     if (deltaPlus > 0) {
         currentSqrtPrice = deltaPlusToSqrtPriceX96(deltaPlus);
