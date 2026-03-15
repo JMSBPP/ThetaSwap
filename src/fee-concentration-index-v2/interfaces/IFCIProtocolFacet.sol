@@ -27,7 +27,7 @@ interface IFCIProtocolFacet is IHooks {
     function removePositionInRange(bytes calldata hookData, bytes32 posKey, LiquidityPositionSnapshot calldata snapshot) external returns (SwapCount swapLifetime, BlockCount blockLifetime, uint128 totalRangeLiq);
 
     // ── Tick ──
-    function currentTick(bytes calldata hookData) external view returns (int24);
+    function currentTick(bytes calldata hookData, PoolId poolId) external view returns (int24);
 
     // ── Fee growth baseline ──
     function setFeeGrowthBaseline(bytes calldata hookData, PoolId poolId, bytes32 posKey, uint256 feeGrowth) external;
@@ -40,9 +40,9 @@ interface IFCIProtocolFacet is IHooks {
 
     // ── Transient storage ──
     function tstoreTick(bytes calldata hookData, int24 tick) external;
-    function tloadTick(bytes calldata hookData) external view returns (int24 tick);
+    function tloadTick(bytes calldata hookData) external returns (int24 tick);
     function tstoreRemovalData(bytes calldata hookData, uint256 feeLast, uint128 posLiquidity, uint256 rangeFeeGrowth) external;
-    function tloadRemovalData(bytes calldata hookData) external view returns (uint256 feeLast, uint128 posLiquidity, uint256 rangeFeeGrowth);
+    function tloadRemovalData(bytes calldata hookData) external returns (uint256 feeLast, uint128 posLiquidity, uint256 rangeFeeGrowth);
 
     // ── Overlapping ranges ──
     function incrementOverlappingRanges(bytes calldata hookData, PoolId poolId, int24 tickMin, int24 tickMax) external;

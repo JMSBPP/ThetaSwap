@@ -74,7 +74,7 @@ contract FeeConcentrationIndexV2 {
 
         // 4. currentTick
         int24 tick = abi.decode(
-            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData))),
+            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData, poolId))),
             (int24)
         );
 
@@ -97,16 +97,17 @@ contract FeeConcentrationIndexV2 {
 
     function beforeSwap(
         address,
-        PoolKey calldata,
+        PoolKey calldata key,
         SwapParams calldata,
         bytes calldata hookData
     ) external virtual returns (bytes4, BeforeSwapDelta, uint24) {
         bytes2 protocolFlags = getProtocolFlagFromHookData(hookData);
         address facet = address(getProtocolFacet(protocolFlags));
+        PoolId poolId = PoolIdLibrary.toId(key);
 
         // 1. currentTick
         int24 tick = abi.decode(
-            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData))),
+            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData, poolId))),
             (int24)
         );
 
@@ -137,7 +138,7 @@ contract FeeConcentrationIndexV2 {
 
         // 2. currentTick (tickAfter)
         int24 tickAfter = abi.decode(
-            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData))),
+            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData, poolId))),
             (int24)
         );
 
@@ -174,7 +175,7 @@ contract FeeConcentrationIndexV2 {
 
         // 3. currentTick
         int24 tick = abi.decode(
-            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData))),
+            LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData, poolId))),
             (int24)
         );
 
