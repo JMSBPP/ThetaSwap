@@ -17,6 +17,8 @@ function fciRegistryStorage() pure returns (FeeConcentrationIndexRegistryStorage
 }
 
 function setProtocolFacet(bytes2 flag, IFCIProtocolFacet protocolFacet) {
+    // note: Add this from Compose
+    // LibOwner.requireOwner();
     fciRegistryStorage().protocolFacets[flag] = address(protocolFacet);
 }
 

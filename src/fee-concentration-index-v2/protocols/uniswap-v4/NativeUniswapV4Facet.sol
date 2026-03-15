@@ -29,6 +29,7 @@ import {
     tloadRemovalData as _tloadRemovalData
 } from "@fee-concentration-index-v2/modules/FCIProtocolFacetStorageMod.sol";
 import {FeeConcentrationEpochStorage} from "@fee-concentration-index/modules/FeeConcentrationEpochStorageMod.sol";
+import {requireOwner} from "@fee-concentration-index-v2/modules/dependencies/LibOwner.sol";
 
 /// @title NativeUniswapV4Facet
 /// @dev Protocol facet for Uniswap V4 native hooks.
@@ -57,6 +58,7 @@ contract NativeUniswapV4Facet {
     /// @notice Register and initialize a V4 pool for FCI tracking.
     /// @dev poolRpt = abi.encode(PoolKey, uint160 sqrtPriceX96).
     function listen(bytes calldata poolRpt) payable external returns (PoolKey memory poolKey) {
+        requireOwner();
         // 1. Decode poolRpt
         (PoolKey memory rawKey, uint160 sqrtPriceX96) = abi.decode(poolRpt, (PoolKey, uint160));
 
@@ -78,6 +80,7 @@ contract NativeUniswapV4Facet {
 
     /// @notice Set the protocol state view (PoolManager for V4).
     function setProtocolStateView(IProtocolStateView stateView) external {
+        requireOwner();
         _setProtocolStateView(NATIVE_V4, stateView);
     }
 

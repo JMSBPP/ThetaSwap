@@ -26,6 +26,7 @@ import {
 } from "@fee-concentration-index-v2/modules/FCIProtocolFacetStorageMod.sol";
 import {sortTicks} from "@libraries/HookUtilsMod.sol";
 import {LibCall} from "solady/utils/LibCall.sol";
+import {requireOwner} from "@fee-concentration-index-v2/modules/dependencies/LibOwner.sol";
 import {LiquidityPositionSnapshot} from "@fee-concentration-index-v2/types/LiquidityPositionSnapshot.sol";
 import {PositionConfig} from "@uniswap/v4-periphery/src/libraries/PositionConfig.sol";
 
@@ -299,6 +300,7 @@ contract FeeConcentrationIndexV2 {
     // ── Registration ──
 
     function registerProtocolFacet(bytes2 flags, IFCIProtocolFacet facet) external {
+        requireOwner();
         setProtocolFacet(flags, facet);
     }
 
