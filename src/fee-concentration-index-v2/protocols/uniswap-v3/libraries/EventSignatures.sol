@@ -20,3 +20,18 @@ uint256 constant POOL_REGISTERED_SIG = 0x403a01572a6930b9303134960bb6e5d695084d3
 
 // keccak256("PoolUnregistered(uint256,address)")
 uint256 constant POOL_UNREGISTERED_SIG = 0xf8a85b30c450aae09b266730946d2e1c61a36e77d194bf4e50205060a8163079;
+
+// ── Batch signature arrays ──
+
+function selfSyncSigs() pure returns (uint256[] memory sigs) {
+    sigs = new uint256[](2);
+    sigs[0] = POOL_REGISTERED_SIG;
+    sigs[1] = POOL_UNREGISTERED_SIG;
+}
+
+function v3PoolSigs() pure returns (uint256[] memory sigs) {
+    sigs = new uint256[](3);
+    sigs[0] = V3_SWAP_SIG;
+    sigs[1] = V3_MINT_SIG;
+    sigs[2] = V3_BURN_SIG;
+}
