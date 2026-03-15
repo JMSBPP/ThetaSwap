@@ -13,8 +13,9 @@ import {BlockCount} from "typed-uniswap-v4/types/BlockCountMod.sol";
 import {LiquidityPositionSnapshot} from "@fee-concentration-index-v2/types/LiquidityPositionSnapshot.sol";
 import {NATIVE_V4} from "@fee-concentration-index-v2/types/FlagsRegistry.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
+import {IFeeConcentrationIndex} from "@fee-concentration-index/interfaces/IFeeConcentrationIndex.sol";
 import {
-    fciFacetAdminStorage, addPool, setProtocolStateView as _setProtocolStateView
+    fciFacetAdminStorage, addPool, setProtocolStateView as _setProtocolStateView, setFci as _setFci
 } from "@fee-concentration-index-v2/modules/FCIFacetAdminStorageMod.sol";
 import {IProtocolStateView} from "@protocol-adapter/interfaces/IProtocolStateView.sol";
 import {fromUniswapV4PoolKeyToPoolKey} from "./libraries/UniswapV4PoolKeyLib.sol";
@@ -54,10 +55,11 @@ contract NativeUniswapV4Facet {
 
     event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag);
 
-    /// @notice Initialize the facet — sets owner and PoolManager in one call.
-    function initialize(address _owner, IProtocolStateView _protocolStateView) external {
+    /// @notice Initialize the facet — sets owner, PoolManager, and FCI reference.
+    function initialize(address _owner, IProtocolStateView _protocolStateView, IFeeConcentrationIndex _fci) external {
         initOwner(_owner);
         _setProtocolStateView(NATIVE_V4, _protocolStateView);
+        _setFci(NATIVE_V4, _fci);
     }
     error PoolAlreadyInitialized(PoolId poolId);
 
