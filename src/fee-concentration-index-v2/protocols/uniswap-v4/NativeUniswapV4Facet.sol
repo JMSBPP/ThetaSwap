@@ -66,7 +66,6 @@ contract NativeUniswapV4Facet {
     /// @notice Register and initialize a V4 pool for FCI tracking.
     /// @dev poolRpt = abi.encode(PoolKey, uint160 sqrtPriceX96).
     function listen(bytes calldata poolRpt) payable external returns (PoolKey memory poolKey) {
-        requireOwner();
         // 1. Decode poolRpt
         (PoolKey memory rawKey, uint160 sqrtPriceX96) = abi.decode(poolRpt, (PoolKey, uint160));
 

@@ -17,6 +17,10 @@ import {FeeConcentrationEpochStorage} from "@fee-concentration-index/modules/Fee
 import {
     fciRegistryStorage, getProtocolFacet, setProtocolFacet, getProtocolFlagFromHookData
 } from "@fee-concentration-index-v2/modules/FeeConcentrationIndexRegistryStorageMod.sol";
+import {
+    setFci as _setFci, setProtocolStateView as _setProtocolStateView
+} from "@fee-concentration-index-v2/modules/FCIFacetAdminStorageMod.sol";
+import {IProtocolStateView} from "@protocol-adapter/interfaces/IProtocolStateView.sol";
 import {IFCIProtocolFacet} from "@fee-concentration-index-v2/interfaces/IFCIProtocolFacet.sol";
 import {
     FeeConcentrationIndexV2Storage, fciV2Storage
@@ -301,6 +305,18 @@ contract FeeConcentrationIndexV2 {
 
     function initialize(address _owner) external {
         initOwner(_owner);
+    }
+
+    // ── Facet admin storage (writes to V2's storage context for delegatecall reads) ──
+
+    function setFacetFci(bytes2 flags, IFeeConcentrationIndex fci) external {
+        requireOwner();
+        _setFci(flags, fci);
+    }
+
+    function setFacetProtocolStateView(bytes2 flags, IProtocolStateView stateView) external {
+        requireOwner();
+        _setProtocolStateView(flags, stateView);
     }
 
     // ── Registration ──
