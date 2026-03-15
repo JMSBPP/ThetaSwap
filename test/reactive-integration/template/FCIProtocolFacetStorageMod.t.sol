@@ -3,7 +3,7 @@ pragma solidity ^0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {PoolId} from "v4-core/src/types/PoolId.sol";
-import {BlockCount} from "typed-uniswap-v4/fee-concentration-index/types/BlockCountMod.sol";
+import {BlockCount} from "typed-uniswap-v4/types/BlockCountMod.sol";
 import {FeeConcentrationIndexStorage, FCI_STORAGE_SLOT} from "@fee-concentration-index/modules/FeeConcentrationIndexStorageMod.sol";
 import {
     protocolFciStorage,

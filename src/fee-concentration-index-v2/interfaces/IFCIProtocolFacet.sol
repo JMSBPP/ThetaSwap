@@ -5,9 +5,9 @@ import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 import {PoolId} from "v4-core/src/types/PoolId.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {ModifyLiquidityParams} from "v4-core/src/types/PoolOperation.sol";
-import {TickRange} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeMod.sol";
-import {SwapCount} from "typed-uniswap-v4/fee-concentration-index/types/SwapCountMod.sol";
-import {BlockCount} from "typed-uniswap-v4/fee-concentration-index/types/BlockCountMod.sol";
+import {TickRange} from "typed-uniswap-v4/types/TickRangeMod.sol";
+import {SwapCount} from "typed-uniswap-v4/types/SwapCountMod.sol";
+import {BlockCount} from "typed-uniswap-v4/types/BlockCountMod.sol";
 
 /// @title IFCIProtocolFacet
 /// @dev Extends IHooks with protocol-specific behavioral functions.
