@@ -52,6 +52,7 @@ contract NativeUniswapV4Facet {
     // ── Admin (direct call, NOT delegatecall) ──
 
     event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag);
+    error PoolAlreadyInitialized(PoolId poolId);
 
     /// @notice Register and initialize a V4 pool for FCI tracking.
     /// @dev poolRpt = abi.encode(PoolKey, uint160 sqrtPriceX96).
@@ -64,10 +65,13 @@ contract NativeUniswapV4Facet {
         poolKey = fromUniswapV4PoolKeyToPoolKey(abi.encode(rawKey), fciHook);
 
         // 3. Initialize pool on PoolManager
-        IPoolManager(address(fciFacetAdminStorage(NATIVE_V4).protocolStateView)).initialize(poolKey, sqrtPriceX96);
+        PoolId poolId = PoolIdLibrary.toId(poolKey);
+        try IPoolManager(address(fciFacetAdminStorage(NATIVE_V4).protocolStateView)).initialize(poolKey, sqrtPriceX96) {
+        } catch {
+            revert PoolAlreadyInitialized(poolId);
+        }
 
         // 4. Register
-        PoolId poolId = PoolIdLibrary.toId(poolKey);
         addPool(NATIVE_V4, poolId);
         emit PoolAdded(address(this), address(fciFacetAdminStorage(NATIVE_V4).protocolStateView), poolId, NATIVE_V4);
     }
