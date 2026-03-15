@@ -8,6 +8,7 @@ import {ModifyLiquidityParams} from "v4-core/src/types/PoolOperation.sol";
 import {TickRange} from "typed-uniswap-v4/types/TickRangeMod.sol";
 import {SwapCount} from "typed-uniswap-v4/types/SwapCountMod.sol";
 import {BlockCount} from "typed-uniswap-v4/types/BlockCountMod.sol";
+import {LiquidityPositionSnapshot} from "@fee-concentration-index-v2/types/LiquidityPositionSnapshot.sol";
 
 /// @title IFCIProtocolFacet
 /// @dev Extends IHooks with protocol-specific behavioral functions.
@@ -22,8 +23,8 @@ interface IFCIProtocolFacet is IHooks {
     function poolRangeFeeGrowthInside(bytes calldata hookData, PoolId poolId, int24 currentTick, TickRange tickRange) external view returns (uint256);
 
     // ── Position registration ──
-    function addPositionInRange(bytes calldata hookData, PoolId poolId, bytes32 posKey, TickRange tickRange, uint128 posLiquidity) external;
-    function removePositionInRange(bytes calldata hookData, PoolId poolId, bytes32 posKey, uint128 posLiquidity) external returns (SwapCount swapLifetime, BlockCount blockLifetime, uint128 totalRangeLiq);
+    function addPositionInRange(bytes calldata hookData, bytes32 posKey, LiquidityPositionSnapshot calldata snapshot) external;
+    function removePositionInRange(bytes calldata hookData, bytes32 posKey, LiquidityPositionSnapshot calldata snapshot) external returns (SwapCount swapLifetime, BlockCount blockLifetime, uint128 totalRangeLiq);
 
     // ── Tick ──
     function currentTick(bytes calldata hookData) external view returns (int24);
