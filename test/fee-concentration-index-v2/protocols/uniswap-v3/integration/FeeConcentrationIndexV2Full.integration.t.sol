@@ -4,8 +4,8 @@ pragma solidity ^0.8.26;
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 import {Accounts, initAccounts} from "@foundry-script/types/Accounts.sol";
-import {SEPOLIA, sepoliaV3Pool} from "@foundry-script/utils/Deployments.sol";
-import {FundAccountsScript} from "@foundry-script/deploy/FundAccounts.s.sol";
+import {SEPOLIA, sepoliaV3Pool, resolveTokens} from "@foundry-script/utils/Deployments.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
@@ -33,8 +33,6 @@ contract FeeConcentrationIndexV2FullIntegrationTest is Test {
     address constant CALLBACK_PROXY = 0xc9f36411C9897e7F959D99ffca2a0Ba7ee0D7bDA;
 
     // ── State ──
-    uint256 deployerPk;
-    address deployer;
     Accounts accounts;
     IUniswapV3Pool v3Pool;
 
@@ -46,30 +44,33 @@ contract FeeConcentrationIndexV2FullIntegrationTest is Test {
     PoolId poolId;
 
     function setUp() public {
-        deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        deployer = vm.addr(deployerPk);
+        accounts = initAccounts(vm);
         v3Pool = sepoliaV3Pool();
 
-        accounts = initAccounts(vm);
-        console2.log("Deployer: %s", deployer);
+        console2.log("Deployer: %s", accounts.deployer.addr);
         console2.log("V3 Pool: %s", address(v3Pool));
 
-        // ── 1. Fund LP accounts (from deployer's token balance) ──
-        FundAccountsScript fundScript = new FundAccountsScript();
-        fundScript.run();
+        // ── 1. Fund LP accounts (10k each — safe amount) ──
+        (address tA, address tB) = resolveTokens(block.chainid);
+        uint256 fundAmount = 10_000e18;
+        vm.startBroadcast(accounts.deployer.privateKey);
+        IERC20(tA).transfer(accounts.lpPassive.addr, fundAmount);
+        IERC20(tB).transfer(accounts.lpPassive.addr, fundAmount);
+        vm.stopBroadcast();
+        console2.log("Funded lpPassive with %d of each token", fundAmount);
 
         // ── 2. Deploy FCI V2 ──
-        vm.startBroadcast(deployerPk);
+        vm.startBroadcast(accounts.deployer.privateKey);
         fci = new FeeConcentrationIndexV2();
-        fci.initialize(deployer);
+        fci.initialize(accounts.deployer.addr);
         vm.stopBroadcast();
         console2.log("FCI_V2=%s", address(fci));
 
         // ── 2. Deploy + initialize UniswapV3Facet ──
-        vm.startBroadcast(deployerPk);
+        vm.startBroadcast(accounts.deployer.privateKey);
         facet = new UniswapV3Facet();
         facet.initialize(
-            deployer,
+            accounts.deployer.addr,
             IProtocolStateView(address(v3Pool)),
             IFeeConcentrationIndex(address(fci))
         );
@@ -77,24 +78,24 @@ contract FeeConcentrationIndexV2FullIntegrationTest is Test {
         console2.log("V3_FACET=%s", address(facet));
 
         // ── 3. Deploy UniswapV3Callback ──
-        vm.startBroadcast(deployerPk);
+        vm.startBroadcast(accounts.deployer.privateKey);
         callback = new UniswapV3Callback(
             address(fci),
             CALLBACK_PROXY,
-            deployer  // rvmId = deployer EOA
+            accounts.deployer.addr  // rvmId = deployer EOA
         );
         vm.stopBroadcast();
         console2.log("V3_CALLBACK=%s", address(callback));
 
         // ── 4. Fund callback with SepETH for pay() ──
-        vm.startBroadcast(deployerPk);
+        vm.startBroadcast(accounts.deployer.privateKey);
         (bool ok,) = address(callback).call{value: 0.05 ether}("");
         require(ok, "Failed to fund callback");
         vm.stopBroadcast();
         console2.log("Callback funded with 0.05 SepETH");
 
         // ── 5. Wire: register facet + admin storage on FCI V2 ──
-        vm.startBroadcast(deployerPk);
+        vm.startBroadcast(accounts.deployer.privateKey);
         fci.registerProtocolFacet(UNISWAP_V3_REACTIVE, IFCIProtocolFacet(address(facet)));
         fci.setFacetFci(UNISWAP_V3_REACTIVE, IFeeConcentrationIndex(address(fci)));
         fci.setFacetProtocolStateView(UNISWAP_V3_REACTIVE, IProtocolStateView(address(v3Pool)));
@@ -128,7 +129,7 @@ contract FeeConcentrationIndexV2FullIntegrationTest is Test {
         console2.log("UniswapV3Reactive on Lasna: %s", reactiveAddr);
 
         // ── LISTEN ──
-        vm.startBroadcast(deployerPk);
+        vm.startBroadcast(accounts.deployer.privateKey);
         poolKey = facet.listen(abi.encode(v3Pool));
         poolId = poolKey.toId();
         vm.stopBroadcast();
