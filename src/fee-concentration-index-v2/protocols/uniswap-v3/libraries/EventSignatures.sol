@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {POOL_ADDED_SIG} from "@fee-concentration-index-v2/libraries/PoolAddedSig.sol";
+
 // Uniswap V3 event topic0 signatures for Reactive Network subscriptions.
 // Values are pre-calculated. Derivations shown in comments.
 

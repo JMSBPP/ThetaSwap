@@ -17,6 +17,7 @@ import {
 } from "@fee-concentration-index-v2/modules/FCIFacetAdminStorageMod.sol";
 import {requireOwner, initOwner} from "@fee-concentration-index-v2/modules/dependencies/LibOwner.sol";
 import {fromUniswapV3PoolToPoolKey} from "./libraries/UniswapV3PoolKeyLib.sol";
+import {encodeV3PoolAddedData} from "./libraries/UniswapV3PoolAddedLib.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 /// @title UniswapV3Facet
@@ -40,7 +41,7 @@ contract UniswapV3Facet {
 
     // ── Admin (direct call, NOT delegatecall) ──
 
-    event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag);
+    event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag, bytes data);
     error PoolAlreadyRegistered(PoolId poolId);
 
     function initialize(address _owner, IProtocolStateView _protocolStateView, IFeeConcentrationIndex _fci) external {
@@ -57,7 +58,13 @@ contract UniswapV3Facet {
         poolKey = fromUniswapV3PoolToPoolKey(v3Pool, fciHook);
         PoolId poolId = PoolIdLibrary.toId(poolKey);
         addPool(UNISWAP_V3, poolId);
-        emit PoolAdded(address(this), address(fciFacetAdminStorage(UNISWAP_V3).protocolStateView), poolId, UNISWAP_V3);
+        emit PoolAdded(
+            address(this),
+            address(fciFacetAdminStorage(UNISWAP_V3).fci),
+            poolId,
+            UNISWAP_V3,
+            encodeV3PoolAddedData(block.chainid, address(v3Pool), address(v3Pool))
+        );
     }
 
     function setProtocolStateView(IProtocolStateView stateView) external {

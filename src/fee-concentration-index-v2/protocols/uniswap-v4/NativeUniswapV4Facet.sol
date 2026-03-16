@@ -53,7 +53,7 @@ contract NativeUniswapV4Facet {
 
     // ── Admin (direct call, NOT delegatecall) ──
 
-    event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag);
+    event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag, bytes data);
 
     /// @notice Initialize the facet — sets owner, PoolManager, and FCI reference.
     function initialize(address _owner, IProtocolStateView _protocolStateView, IFeeConcentrationIndex _fci) external {
@@ -82,7 +82,7 @@ contract NativeUniswapV4Facet {
 
         // 4. Register
         addPool(NATIVE_V4, poolId);
-        emit PoolAdded(address(this), address(fciFacetAdminStorage(NATIVE_V4).protocolStateView), poolId, NATIVE_V4);
+        emit PoolAdded(address(this), address(fciFacetAdminStorage(NATIVE_V4).protocolStateView), poolId, NATIVE_V4, "");
     }
 
     /// @notice Set the protocol state view (PoolManager for V4).
