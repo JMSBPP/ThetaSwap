@@ -5,9 +5,13 @@ import {IReactive} from "reactive-lib/interfaces/IReactive.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
-import {ModifyLiquidityParams} from "v4-core/src/types/PoolOperation.sol";
-import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
+import {ModifyLiquidityParams, SwapParams} from "v4-core/src/types/PoolOperation.sol";
 import {V3MintData, V3SwapData, V3BurnData} from "reactive-hooks/types/ReactiveCallbackDataMod.sol";
+import {pay as _pay, requireCallback} from "reactive-hooks/modules/CallbackMod.sol";
+import {setRvmId, setCallbackProxy} from "reactive-hooks/modules/CallbackStorageMod.sol";
+import {RvmId} from "reactive-hooks/types/RvmId.sol";
+import {CallbackProxy} from "reactive-hooks/types/CallbackProxy.sol";
+import {coverDebt} from "reactive-hooks/modules/DebtMod.sol";
 import {fromUniswapV3PoolToPoolKey} from "./libraries/UniswapV3PoolKeyLib.sol";
 import {
     encodeAfterAddLiquidity, encodeBeforeSwap, encodeAfterSwap,
@@ -24,14 +28,16 @@ import {V3_MINT_SIG, V3_SWAP_SIG, V3_BURN_SIG} from "./libraries/EventSignatures
 contract UniswapV3Callback {
     IHooks immutable fci;
 
-    constructor(address fci_) {
+    constructor(address fci_, address callbackProxy_, address rvmId_) {
         fci = IHooks(fci_);
+        setCallbackProxy(CallbackProxy.wrap(callbackProxy_));
+        setRvmId(RvmId.wrap(rvmId_));
     }
 
     function unlockCallback(bytes calldata) external returns (bytes memory) {}
 
-    function unlockCallbackReactive(address rvmId, bytes calldata data) external {
-        // TODO: auth (rvmId check, msg.sender = callback proxy)
+    function unlockCallbackReactive(address rvmSender, bytes calldata data) external {
+        requireCallback(msg.sender, rvmSender);
 
         (IReactive.LogRecord memory log, int24 tickBefore) = abi.decode(data, (IReactive.LogRecord, int24));
         uint256 sig = log.topic_0;
@@ -45,6 +51,14 @@ contract UniswapV3Callback {
         } else if (sig == V3_BURN_SIG) {
             _handleBurn(decodeV3BurnFromLog(log));
         }
+    }
+
+    function pay(uint256 amount) external {
+        _pay(msg.sender, amount, address(this));
+    }
+
+    receive() external payable {
+        coverDebt(address(this));
     }
 
     function _handleMint(V3MintData memory data) internal {
@@ -78,7 +92,7 @@ contract UniswapV3Callback {
     }
 
     function _handleBurn(V3BurnData memory data) internal {
-        if (data.liquidity == 0) return; // skip zero-burns
+        if (data.liquidity == 0) return;
 
         PoolKey memory key = fromUniswapV3PoolToPoolKey(data.pool, fci);
 

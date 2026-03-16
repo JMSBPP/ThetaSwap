@@ -41,6 +41,7 @@ remappings = [
     "@types/=src/types/",
     "@libraries/=src/libraries/",
     "@foundry-script/=foundry-script/",
+    "foundry-devops/=lib/foundry-devops/src/",
 ]
 
 script = "foundry-script"
