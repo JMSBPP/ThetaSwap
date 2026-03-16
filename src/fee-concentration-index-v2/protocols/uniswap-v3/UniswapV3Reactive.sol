@@ -18,6 +18,7 @@ import {
 import {
     isSelfSync, topic0, logChainId
 } from "reactive-hooks/types/LogRecordExtMod.sol";
+import {mutateV3Payload} from "./libraries/UniswapV3PayloadMutatorLib.sol";
 
 uint64 constant CALLBACK_GAS_LIMIT = 1_000_000;
 
@@ -60,7 +61,7 @@ contract UniswapV3Reactive {
             abi.encodeWithSignature(
                 "unlockCallbackReactive(address,bytes)",
                 address(0),
-                abi.encode(log)
+                mutateV3Payload(log)
             )
         );
     }

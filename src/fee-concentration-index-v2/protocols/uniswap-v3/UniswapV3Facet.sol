@@ -28,7 +28,8 @@ import {
 import {FeeConcentrationEpochStorage} from "@fee-concentration-index/modules/FeeConcentrationEpochStorageMod.sol";
 import {requireOwner, initOwner} from "@fee-concentration-index-v2/modules/dependencies/LibOwner.sol";
 import {fromUniswapV3PoolToPoolKey} from "./libraries/UniswapV3PoolKeyLib.sol";
-import {decodePoolAddress} from "./libraries/V3HookDataLib.sol";
+import {decodePoolAddress, decodeActionType, decodeSwapTick} from "./libraries/V3HookDataLib.sol";
+import {BEFORE_SWAP} from "./libraries/V3ActionTypes.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 /// @title UniswapV3Facet
@@ -126,6 +127,11 @@ contract UniswapV3Facet {
     // ── Tick ──
 
     function currentTick(bytes calldata hookData, PoolId) external view onlyDelegateCall returns (int24) {
+        uint8 action = decodeActionType(hookData);
+        if (action == BEFORE_SWAP) {
+            return decodeSwapTick(hookData);
+        }
+        // AFTER_SWAP, AFTER_ADD_LIQUIDITY, BEFORE_REMOVE_LIQUIDITY — read from V3 pool
         address pool = decodePoolAddress(hookData);
         (, int24 tick,,,,,) = IUniswapV3Pool(pool).slot0();
         return tick;
@@ -157,12 +163,13 @@ contract UniswapV3Facet {
 
     // ── Transient storage ──
 
-    function tstoreTick(bytes calldata, int24 tick) external onlyDelegateCall {
-        _tstoreTick(UNISWAP_V3_REACTIVE, tick);
+    function tstoreTick(bytes calldata, int24) external onlyDelegateCall {
+        // No-op for V3 reactive — tick comes from hookData, not transient storage
     }
 
-    function tloadTick(bytes calldata) external onlyDelegateCall returns (int24 tick) {
-        tick = _tloadTick(UNISWAP_V3_REACTIVE);
+    function tloadTick(bytes calldata hookData) external onlyDelegateCall returns (int24 tick) {
+        // V3 reactive: read tickBefore from hookData (injected by payload mutator)
+        tick = decodeSwapTick(hookData);
     }
 
     function tstoreRemovalData(bytes calldata, uint256 feeLast, uint128 posLiquidity, uint256 rangeFeeGrowth) external onlyDelegateCall {
