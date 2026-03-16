@@ -18,3 +18,6 @@ bytes2 constant UNISWAP_V3 = bytes2(0x5282);
 
 // bytes2(keccak256("uniswap-v2"))
 bytes2 constant UNISWAP_V2 = bytes2(0x5F4C);
+
+// bytes2(uint16(UNISWAP_V3) | uint16(REACTIVE)) = 0x52FF
+bytes2 constant UNISWAP_V3_REACTIVE = bytes2(0x52FF);
