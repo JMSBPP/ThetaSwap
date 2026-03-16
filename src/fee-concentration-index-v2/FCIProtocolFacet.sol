@@ -15,7 +15,7 @@ import {fromPoolRptToPoolKey} from "@fee-concentration-index-v2/libraries/PoolKe
 
 contract FCIProtocolFacet {
 
-    event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag);
+    event PoolAdded(address indexed facet, address indexed callback, PoolId indexed poolId, bytes2 protocolFlag, bytes data);
 
     /// @notice Register a pool for FCI tracking.
     /// @dev fromPoolRptToPoolKey is to be written per protocol semantics —
@@ -25,6 +25,6 @@ contract FCIProtocolFacet {
         poolKey = fromPoolRptToPoolKey(poolRpt, fciHook);
         PoolId poolId = PoolIdLibrary.toId(poolKey);
         addPool(PROTOCOL_FLAG, poolId);
-        emit PoolAdded(address(this), address(getProtocolCallback(PROTOCOL_FLAG)), poolId, PROTOCOL_FLAG);
+        emit PoolAdded(address(this), address(getProtocolCallback(PROTOCOL_FLAG)), poolId, PROTOCOL_FLAG, "");
     }
 }
