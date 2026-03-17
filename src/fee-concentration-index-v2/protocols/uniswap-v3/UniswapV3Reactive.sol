@@ -5,8 +5,8 @@ import {IReactive} from "reactive-lib/interfaces/IReactive.sol";
 import {ISubscriptionService} from "reactive-lib/interfaces/ISubscriptionService.sol";
 import {coverDebt, depositToSystem} from "reactive-hooks/modules/DebtMod.sol";
 import {SYSTEM_CONTRACT} from "reactive-hooks/libraries/DebtLib.sol";
-import {requireVM} from "reactive-hooks/modules/ReactVMMod.sol";
-import {isReactiveVm, isActive} from "reactive-hooks/types/ReactVM.sol";
+import {requireVM, reactVmStorage} from "reactive-hooks/modules/ReactVMMod.sol";
+import {ReactVm} from "reactive-hooks/types/ReactVM.sol";
 import {REACTIVE_IGNORE} from "reactive-hooks/libraries/SubscriptionLib.sol";
 import {POOL_ADDED_SIG} from "@fee-concentration-index-v2/libraries/PoolAddedSig.sol";
 import {handlePoolAdded, dispatchEvent} from "@fee-concentration-index-v2/modules/ReactiveDispatchMod.sol";
@@ -18,11 +18,20 @@ import {handlePoolAdded, dispatchEvent} from "@fee-concentration-index-v2/module
 contract UniswapV3Reactive {
     ISubscriptionService immutable service;
 
+    error OnlyReactVM();
+
     constructor(uint256 originChainId, address facetAddress) payable {
         service = ISubscriptionService(SYSTEM_CONTRACT);
 
-        if (!isActive(isReactiveVm())) {
-            // Subscribe to PoolAdded events from the facet on the origin chain
+        // Initialize ReactVM storage for requireVM() checks
+        // size == 0 → ReactVM instance (SystemContract has no code)
+        // size > 0  → RN instance (SystemContract exists)
+        uint256 size;
+        assembly { size := extcodesize(0x0000000000000000000000000000000000fffFfF) }
+        reactVmStorage().reactVm = ReactVm.wrap(size == 0);
+
+        // RN instance: subscribe to PoolAdded from facet on origin chain
+        if (size > 0) {
             service.subscribe(originChainId, facetAddress, POOL_ADDED_SIG, REACTIVE_IGNORE, REACTIVE_IGNORE, REACTIVE_IGNORE);
             depositToSystem(address(this));
         }
