@@ -66,34 +66,34 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CMD-01 | — | Pending |
-| CMD-02 | — | Pending |
-| CMD-03 | — | Pending |
-| CMD-04 | — | Pending |
-| CMD-05 | — | Pending |
-| CMD-06 | — | Pending |
-| CMD-07 | — | Pending |
-| CMD-08 | — | Pending |
-| CMD-09 | — | Pending |
-| DEP-01 | — | Pending |
-| DEP-02 | — | Pending |
-| DEP-03 | — | Pending |
-| DEP-04 | — | Pending |
-| DEP-05 | — | Pending |
-| DEP-06 | — | Pending |
-| OUT-01 | — | Pending |
-| OUT-02 | — | Pending |
-| OUT-03 | — | Pending |
-| OUT-04 | — | Pending |
-| SET-01 | — | Pending |
-| SET-02 | — | Pending |
-| SET-03 | — | Pending |
+| CMD-01 | Phase 3 | Pending |
+| CMD-02 | Phase 3 | Pending |
+| CMD-03 | Phase 3 | Pending |
+| CMD-04 | Phase 3 | Pending |
+| CMD-05 | Phase 3 | Pending |
+| CMD-06 | Phase 3 | Pending |
+| CMD-07 | Phase 3 | Pending |
+| CMD-08 | Phase 3 | Pending |
+| CMD-09 | Phase 3 | Pending |
+| DEP-01 | Phase 2 | Pending |
+| DEP-02 | Phase 2 | Pending |
+| DEP-03 | Phase 2 | Pending |
+| DEP-04 | Phase 2 | Pending |
+| DEP-05 | Phase 2 | Pending |
+| DEP-06 | Phase 2 | Pending |
+| OUT-01 | Phase 2 | Pending |
+| OUT-02 | Phase 3 | Pending |
+| OUT-03 | Phase 3 | Pending |
+| OUT-04 | Phase 2 | Pending |
+| SET-01 | Phase 1 | Pending |
+| SET-02 | Phase 1 | Pending |
+| SET-03 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 22 total
-- Mapped to phases: 0
-- Unmapped: 22 ⚠️
+- Mapped to phases: 22
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-17*
-*Last updated: 2026-03-17 after initial definition*
+*Last updated: 2026-03-17 after roadmap creation*
