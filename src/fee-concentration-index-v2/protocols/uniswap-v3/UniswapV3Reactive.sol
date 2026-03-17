@@ -45,6 +45,12 @@ contract UniswapV3Reactive {
     function react(IReactive.LogRecord calldata log) external {
         if (!vm) revert OnlyReactVM();
 
+        // Zero-burn skip: V3 burnPosition() emits liq=0 then full burn.
+        if (log.topic_0 == V3_BURN_SIG) {
+            (uint128 burnedLiq,,) = abi.decode(log.data, (uint128, uint256, uint256));
+            if (burnedLiq == 0) return;
+        }
+
         emit IReactive.Callback(
             log.chain_id, callback, CALLBACK_GAS_LIMIT,
             abi.encodeWithSignature(

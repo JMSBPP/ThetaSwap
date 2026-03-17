@@ -173,16 +173,11 @@ contract FeeConcentrationIndexV2 {
         );
 
         // 2. latestPositionFeeGrowthInside
+        // For V3 reactive: facet overrides posLiquidity from hookData (posLiqBefore from ReactVM shadow).
         (uint128 posLiquidity, uint256 feeLast0) = abi.decode(
             LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.latestPositionFeeGrowthInside, (hookData, poolId, posKey))),
             (uint128, uint256)
         );
-
-        // Async fallback: V3 reactive callbacks arrive after the burn completes,
-        // so pool.positions() returns 0 liquidity. Use params.liquidityDelta instead.
-        if (posLiquidity == 0) {
-            posLiquidity = uint128(uint256(-params.liquidityDelta));
-        }
 
         // 3. currentTick
         int24 tick = abi.decode(

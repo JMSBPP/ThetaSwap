@@ -33,7 +33,7 @@ import {FeeConcentrationEpochStorage} from "@fee-concentration-index/modules/Fee
 import {requireOwner, initOwner} from "@fee-concentration-index-v2/modules/dependencies/LibOwner.sol";
 import {fromUniswapV3PoolToPoolKey} from "./libraries/UniswapV3PoolKeyLib.sol";
 import {encodeV3PoolAddedData} from "./libraries/UniswapV3PoolAddedLib.sol";
-import {decodePoolAddress, decodeActionType, decodeSwapTick} from "./libraries/V3HookDataLib.sol";
+import {decodePoolAddress, decodeActionType, decodeSwapTick, decodePosLiqBefore} from "./libraries/V3HookDataLib.sol";
 import {BEFORE_SWAP} from "./libraries/V3ActionTypes.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
@@ -101,6 +101,15 @@ contract UniswapV3Facet {
     function latestPositionFeeGrowthInside(bytes calldata hookData, PoolId, bytes32 posKey) external view onlyDelegateCall returns (uint128 posLiquidity, uint256 feeGrowthLast) {
         address pool = decodePoolAddress(hookData);
         (posLiquidity, feeGrowthLast,,,) = IUniswapV3Pool(pool).positions(posKey);
+
+        // Override posLiquidity from hookData when present (V3 reactive burn path).
+        // Burn hookData is 39 bytes (23 header + 16 posLiqBefore).
+        if (hookData.length >= 39) {
+            uint128 posLiqOverride = decodePosLiqBefore(hookData);
+            if (posLiqOverride > 0) {
+                posLiquidity = posLiqOverride;
+            }
+        }
     }
 
     function poolRangeFeeGrowthInside(bytes calldata hookData, PoolId, int24 currentTick_, TickRange tickRange) external view onlyDelegateCall returns (uint256 feeGrowthInside0X128) {

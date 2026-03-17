@@ -81,7 +81,8 @@ contract UniswapV3Callback {
         if (!authorizedCallers[msg.sender]) revert NotAuthorized();
         if (rvmSender != rvmId) revert InvalidRvmId();
 
-        (IReactive.LogRecord memory log, int24 tickBefore) = abi.decode(data, (IReactive.LogRecord, int24));
+        (IReactive.LogRecord memory log, int24 tickBefore, uint128 posLiqBefore) =
+            abi.decode(data, (IReactive.LogRecord, int24, uint128));
         uint256 sig = log.topic_0;
 
         if (sig == V3_MINT_SIG) {
@@ -91,7 +92,7 @@ contract UniswapV3Callback {
             swapData.tickBefore = tickBefore;
             _handleSwap(swapData);
         } else if (sig == V3_BURN_SIG) {
-            _handleBurn(decodeV3BurnFromLog(log));
+            _handleBurn(decodeV3BurnFromLog(log), posLiqBefore);
         }
     }
 
@@ -136,7 +137,7 @@ contract UniswapV3Callback {
         fci.afterSwap(address(0), key, params, BalanceDelta.wrap(0), encodeAfterSwap(address(data.pool), data.tickBefore));
     }
 
-    function _handleBurn(V3BurnData memory data) internal {
+    function _handleBurn(V3BurnData memory data, uint128 posLiqBefore) internal {
         if (data.liquidity == 0) return;
 
         PoolKey memory key = fromUniswapV3PoolToPoolKey(data.pool, fci);
@@ -148,11 +149,14 @@ contract UniswapV3Callback {
             salt: bytes32(0)
         });
 
-        fci.beforeRemoveLiquidity(data.owner, key, params, encodeBeforeRemoveLiquidity(address(data.pool)));
+        fci.beforeRemoveLiquidity(
+            data.owner, key, params,
+            encodeBeforeRemoveLiquidity(address(data.pool), posLiqBefore)
+        );
         fci.afterRemoveLiquidity(
             data.owner, key, params,
             BalanceDelta.wrap(0), BalanceDelta.wrap(0),
-            encodeAfterRemoveLiquidity(address(data.pool))
+            encodeAfterRemoveLiquidity(address(data.pool), posLiqBefore)
         );
     }
 }
