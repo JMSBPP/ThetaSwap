@@ -22,14 +22,17 @@ test: test-sol test-py
 
 # ── Notebooks (headless execute) ─────────────────────────────────────
 notebooks:
-	@for nb in research/notebooks/*.ipynb; do \
+	@tmpdir=$$(mktemp -d); \
+	for nb in research/notebooks/*.ipynb; do \
 		echo "Executing $$nb ..."; \
-		PYTHONPATH=research .venv/bin/jupyter nbconvert \
+		PYTHONPATH=research uhi8/bin/jupyter nbconvert \
 			--to notebook --execute \
 			--ExecutePreprocessor.timeout=300 \
 			--ExecutePreprocessor.kernel_name=thetaswap \
-			"$$nb" --output /dev/null; \
-	done
+			--output-dir="$$tmpdir" \
+			"$$nb"; \
+	done; \
+	rm -rf "$$tmpdir"
 	@echo "All notebooks passed."
 
 # ── Clean ────────────────────────────────────────────────────────────
