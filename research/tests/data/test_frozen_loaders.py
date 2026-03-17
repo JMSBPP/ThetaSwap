@@ -49,3 +49,20 @@ def test_positions_loader_matches_baseline():
     assert isinstance(RAW_POSITIONS[0][0], str)
     assert isinstance(RAW_POSITIONS[0][1], int)
     assert isinstance(RAW_POSITIONS[0][2], float)
+
+def test_selected_pools_hash_matches_baseline():
+    frozen = json.loads((FROZEN_DIR / "selected_pools.json").read_text())
+    assert _sha(frozen["data"]) == BASELINE["selected_pools"]
+    assert frozen["metadata"]["source"] == "subgraph"
+    assert frozen["metadata"]["row_count"] == 10
+
+def test_selected_pools_loader_matches_baseline():
+    from econometrics.cross_pool.data import SELECTED_POOLS
+    serialized = [
+        {"address": p.address, "token0_symbol": p.token0_symbol,
+         "token1_symbol": p.token1_symbol, "fee_tier": p.fee_tier,
+         "tvl_usd": p.tvl_usd, "volume_usd_24h": p.volume_usd_24h,
+         "pair_category": p.pair_category}
+        for p in SELECTED_POOLS
+    ]
+    assert _sha(serialized) == BASELINE["selected_pools"]
