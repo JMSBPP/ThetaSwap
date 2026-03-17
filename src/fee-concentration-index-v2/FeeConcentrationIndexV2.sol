@@ -178,6 +178,12 @@ contract FeeConcentrationIndexV2 {
             (uint128, uint256)
         );
 
+        // Async fallback: V3 reactive callbacks arrive after the burn completes,
+        // so pool.positions() returns 0 liquidity. Use params.liquidityDelta instead.
+        if (posLiquidity == 0) {
+            posLiquidity = uint128(uint256(-params.liquidityDelta));
+        }
+
         // 3. currentTick
         int24 tick = abi.decode(
             LibCall.delegateCallContract(facet, abi.encodeCall(IFCIProtocolFacet.currentTick, (hookData, poolId))),
