@@ -1,12 +1,22 @@
-.PHONY: install test-sol test-py test notebooks clean
+.PHONY: install setup-kernel test-sol test-py test notebooks clean
+
+VENV := uhi8
+PYTHON := $(VENV)/bin/python
+JUPYTER := $(VENV)/bin/jupyter
+PYTEST := $(VENV)/bin/pytest
 
 # ── Setup ────────────────────────────────────────────────────────────
 install:
 	git submodule update --init --recursive
-	python3 -m venv .venv
-	.venv/bin/pip install -e ".[dev]"
-	.venv/bin/python -m ipykernel install --user --name=thetaswap \
+	uv venv $(VENV) --python 3.13
+	uv pip install --python $(PYTHON) -e ".[dev]"
+	$(MAKE) setup-kernel
+
+setup-kernel:
+	$(PYTHON) -m ipykernel install --user --name=thetaswap \
+		--display-name "thetaswap" \
 		--env PYTHONPATH "$(CURDIR)/research"
+	@echo "Kernel 'thetaswap' installed. PYTHONPATH=$(CURDIR)/research"
 
 # ── Solidity ─────────────────────────────────────────────────────────
 test-sol:
@@ -15,17 +25,17 @@ test-sol:
 
 # ── Python ───────────────────────────────────────────────────────────
 test-py:
-	PYTHONPATH=research .venv/bin/pytest research/tests -v
+	cd research && ../$(PYTEST) tests/ -v
 
 # ── All tests ────────────────────────────────────────────────────────
 test: test-sol test-py
 
 # ── Notebooks (headless execute) ─────────────────────────────────────
-notebooks:
+notebooks: setup-kernel
 	@tmpdir=$$(mktemp -d); \
 	for nb in research/notebooks/*.ipynb; do \
 		echo "Executing $$nb ..."; \
-		PYTHONPATH=research uhi8/bin/jupyter nbconvert \
+		PYTHONPATH=research $(JUPYTER) nbconvert \
 			--to notebook --execute \
 			--ExecutePreprocessor.timeout=300 \
 			--ExecutePreprocessor.kernel_name=thetaswap \
@@ -34,6 +44,10 @@ notebooks:
 	done; \
 	rm -rf "$$tmpdir"
 	@echo "All notebooks passed."
+
+# ── Data provenance ──────────────────────────────────────────────────
+verify-data:
+	$(PYTHON) research/data/scripts/verify_provenance.py
 
 # ── Clean ────────────────────────────────────────────────────────────
 clean:
