@@ -7,11 +7,6 @@ import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {ModifyLiquidityParams, SwapParams} from "v4-core/src/types/PoolOperation.sol";
 import {V3MintData, V3SwapData, V3BurnData} from "reactive-hooks/types/ReactiveCallbackDataMod.sol";
-import {pay as _pay, requireCallback} from "reactive-hooks/modules/CallbackMod.sol";
-import {setRvmId, setCallbackProxy} from "reactive-hooks/modules/CallbackStorageMod.sol";
-import {RvmId} from "reactive-hooks/types/RvmId.sol";
-import {CallbackProxy} from "reactive-hooks/types/CallbackProxy.sol";
-import {coverDebt} from "reactive-hooks/modules/DebtMod.sol";
 import {fromUniswapV3PoolToPoolKey} from "./libraries/UniswapV3PoolKeyLib.sol";
 import {
     encodeAfterAddLiquidity, encodeBeforeSwap, encodeAfterSwap,
@@ -24,20 +19,47 @@ import {V3_MINT_SIG, V3_SWAP_SIG, V3_BURN_SIG} from "./libraries/EventSignatures
 /// @dev Receives reactive callbacks from the Reactive Network callback proxy.
 /// Decodes V3 event data, builds V4-shaped calldata with hookData,
 /// and calls FCI V2's hook functions.
-/// Implements IUnlockCallbackReactiveExt without explicit inheritance (SCOP).
+/// Uses V1-proven authorizedCallers pattern for callback authentication.
 contract UniswapV3Callback {
     IHooks immutable fci;
+    address public rvmId;
+    address immutable owner;
+    mapping(address => bool) public authorizedCallers;
 
-    constructor(address fci_, address callbackProxy_, address rvmId_) {
+    error OnlyOwner();
+    error InvalidRvmId();
+    error NotAuthorized();
+    error InsufficientFunds();
+    error TransferFailed();
+
+    event AuthorizedCallerUpdated(address indexed caller, bool authorized);
+    event RvmIdUpdated(address indexed oldRvmId, address indexed newRvmId);
+
+    constructor(address fci_, address callbackProxy_, address rvmId_) payable {
         fci = IHooks(fci_);
-        setCallbackProxy(CallbackProxy.wrap(callbackProxy_));
-        setRvmId(RvmId.wrap(rvmId_));
+        owner = msg.sender;
+        rvmId = rvmId_;
+        authorizedCallers[callbackProxy_] = true;
+    }
+
+    function setRvmId(address rvmId_) external {
+        if (msg.sender != owner) revert OnlyOwner();
+        address old = rvmId;
+        rvmId = rvmId_;
+        emit RvmIdUpdated(old, rvmId_);
+    }
+
+    function setAuthorized(address caller, bool authorized) external {
+        if (msg.sender != owner) revert OnlyOwner();
+        authorizedCallers[caller] = authorized;
+        emit AuthorizedCallerUpdated(caller, authorized);
     }
 
     function unlockCallback(bytes calldata) external returns (bytes memory) {}
 
     function unlockCallbackReactive(address rvmSender, bytes calldata data) external {
-        requireCallback(msg.sender, rvmSender);
+        if (!authorizedCallers[msg.sender]) revert NotAuthorized();
+        if (rvmSender != rvmId) revert InvalidRvmId();
 
         (IReactive.LogRecord memory log, int24 tickBefore) = abi.decode(data, (IReactive.LogRecord, int24));
         uint256 sig = log.topic_0;
@@ -54,11 +76,14 @@ contract UniswapV3Callback {
     }
 
     function pay(uint256 amount) external {
-        _pay(msg.sender, amount, address(this));
+        if (!authorizedCallers[msg.sender]) revert NotAuthorized();
+        if (address(this).balance < amount) revert InsufficientFunds();
+        if (amount > 0) {
+            (bool success,) = payable(msg.sender).call{value: amount}("");
+            if (!success) revert TransferFailed();
+        }
     }
 
-    // Accept ETH for callback gas payments via pay().
-    // No coverDebt — callback lives on destination chain, not Reactive Network.
     receive() external payable {}
 
     function _handleMint(V3MintData memory data) internal {
