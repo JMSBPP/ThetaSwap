@@ -34,3 +34,18 @@ def test_daily_at_loader_matches_baseline():
     combined = {"real": {k: v for k, v in DAILY_AT_MAP.items()},
                 "null": {k: v for k, v in DAILY_AT_NULL_MAP.items()}}
     assert _sha(combined) == BASELINE["daily_at"]
+
+def test_positions_hash_matches_baseline():
+    frozen = json.loads((FROZEN_DIR / "positions.json").read_text())
+    assert _sha(frozen["data"]) == BASELINE["positions"]
+    assert frozen["metadata"]["source"] == "frozen_original"
+    assert frozen["metadata"]["row_count"] == 600
+
+def test_positions_loader_matches_baseline():
+    from econometrics.data import RAW_POSITIONS
+    assert _sha([[d, bl, at] for d, bl, at in RAW_POSITIONS]) == BASELINE["positions"]
+    assert len(RAW_POSITIONS) == 600
+    assert isinstance(RAW_POSITIONS[0], tuple)
+    assert isinstance(RAW_POSITIONS[0][0], str)
+    assert isinstance(RAW_POSITIONS[0][1], int)
+    assert isinstance(RAW_POSITIONS[0][2], float)
