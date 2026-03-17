@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: planning
+stopped_at: Completed 01-crate-foundation-01-01-PLAN.md
+last_updated: "2026-03-17T23:57:20.156Z"
+last_activity: 2026-03-17 — Roadmap created
+progress:
+  total_phases: 3
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
+  percent: 100
+---
+
 # Project State
 
 ## Project Reference
@@ -14,7 +30,7 @@ Plan: 0 of ? in current phase
 Status: Ready to plan
 Last activity: 2026-03-17 — Roadmap created
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -34,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01-crate-foundation P01 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -46,6 +63,9 @@ Recent decisions affecting current work:
 - forge create as primary, cast send --create as fallback (forge RPC bug mitigation)
 - --broadcast and --legacy baked in (always required for Lasna; reduces user error)
 - Pipe-friendly output — address + tx hash only on stdout
+- [Phase 01-crate-foundation]: Use directory-form module (src/deploy/mod.rs) not flat file (deploy.rs) so Phase 2 can add primary.rs and fallback.rs without touching main.rs
+- [Phase 01-crate-foundation]: List clap features=['derive'] in Phase 1 even though no clap code exists yet — avoids Cargo.toml edit in Phase 2 that could be confused with functional change
+- [Phase 01-crate-foundation]: NonZeroExit uses named struct variant {stderr: String} rather than tuple form — stderr field name is self-documenting in logs
 
 ### Pending Todos
 
@@ -59,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17
-Stopped at: Roadmap created — ready to plan Phase 1
+Last session: 2026-03-17T23:57:20.154Z
+Stopped at: Completed 01-crate-foundation-01-01-PLAN.md
 Resume file: None

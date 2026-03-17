@@ -35,9 +35,9 @@
 
 ### Project Setup
 
-- [ ] **SET-01**: Rust crate lives in `d2p/` directory within the monorepo
-- [ ] **SET-02**: Dependencies: clap 4.5, anyhow 1.x, thiserror 2.x, serde_json 1.x
-- [ ] **SET-03**: Binary compiles with `cargo build` from `d2p/` directory
+- [x] **SET-01**: Rust crate lives in `d2p/` directory within the monorepo
+- [x] **SET-02**: Dependencies: clap 4.5, anyhow 1.x, thiserror 2.x, serde_json 1.x
+- [x] **SET-03**: Binary compiles with `cargo build` from `d2p/` directory
 
 ## v2 Requirements
 
@@ -85,9 +85,9 @@
 | OUT-02 | Phase 3 | Pending |
 | OUT-03 | Phase 3 | Pending |
 | OUT-04 | Phase 2 | Pending |
-| SET-01 | Phase 1 | Pending |
-| SET-02 | Phase 1 | Pending |
-| SET-03 | Phase 1 | Pending |
+| SET-01 | Phase 1 | Complete |
+| SET-02 | Phase 1 | Complete |
+| SET-03 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 22 total
