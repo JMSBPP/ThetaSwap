@@ -5,25 +5,17 @@ No runtime Dune calls — data collected during prior sessions.
 """
 from __future__ import annotations
 
+import json as _json
+from pathlib import Path as _Path
 from typing import Final
 
-# ── Q5 IL proxy: day -> il_proxy ──
-IL_MAP: Final[dict[str, float]] = {
-    "2025-12-05": 0.0117, "2025-12-06": 0.0089, "2025-12-07": 0.0045,
-    "2025-12-08": 0.0078, "2025-12-09": 0.0156, "2025-12-10": 0.0123,
-    "2025-12-11": 0.0067, "2025-12-12": 0.0134, "2025-12-13": 0.0098,
-    "2025-12-14": 0.0112, "2025-12-15": 0.0034, "2025-12-16": 0.0056,
-    "2025-12-17": 0.0089, "2025-12-18": 0.0145, "2025-12-19": 0.0167,
-    "2025-12-20": 0.0078, "2025-12-21": 0.0045, "2025-12-22": 0.0023,
-    "2025-12-23": 0.0056, "2025-12-24": 0.0034, "2025-12-25": 0.0012,
-    "2025-12-26": 0.0089, "2025-12-27": 0.0067, "2025-12-28": 0.0123,
-    "2025-12-29": 0.0098, "2025-12-30": 0.0145, "2025-12-31": 0.0112,
-    "2026-01-01": 0.0034, "2026-01-02": 0.0078, "2026-01-03": 0.0156,
-    "2026-01-04": 0.0089, "2026-01-05": 0.0134, "2026-01-06": 0.0167,
-    "2026-01-07": 0.0045, "2026-01-08": 0.0056, "2026-01-09": 0.0098,
-    "2026-01-10": 0.0123, "2026-01-11": 0.0078, "2026-01-12": 0.0034,
-    "2026-01-13": 0.0112, "2026-01-14": 0.0089,
-}
+_FROZEN = _Path(__file__).resolve().parent.parent / "data" / "frozen"
+
+def _load_frozen(name: str):
+    return _json.loads((_FROZEN / name).read_text())
+
+# ── Q5 IL proxy: loaded from canonical frozen JSON ──
+IL_MAP: Final[dict[str, float]] = _load_frozen("il_proxy.json")["data"]
 
 # ── Q4v2 position data (600 rows from pagination) ──
 # Format: (burn_date, blocklife, exit_day_a_t)
