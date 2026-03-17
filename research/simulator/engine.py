@@ -102,41 +102,53 @@ def step_roll(pool: PoolState, new_block: int) -> PoolState:
     return replace(pool, block_number=new_block)
 
 
-# ── Range registry tracking ──
+# ── Range registry ──
+# Mirrors Solidity TickRangeRegistryV2: tracks total liquidity per range.
+# deregister() returns totalRangeLiq BEFORE removal — critical for x_k computation.
 
 
 def _range_key(tl: int, tu: int) -> str:
     return f"{tl}:{tu}"
 
 
-def build_range_registry(
-    pool: PoolState,
-    swap_counts: dict[str, int],
-) -> dict[str, RangeEntry]:
-    """Build range registry from current pool positions and swap counts."""
-    registry: dict[str, RangeEntry] = {}
-    for pos in pool.positions:
-        rk = _range_key(pos.tick_lower, pos.tick_upper)
-        if rk not in registry:
-            registry[rk] = RangeEntry(
-                tick_lower=pos.tick_lower,
-                tick_upper=pos.tick_upper,
-                total_liquidity=pos.liquidity,
-                swap_count=swap_counts.get(rk, 0),
-                block_registered=pos.entry_block,
-                position_keys=(pos.owner,),
-            )
-        else:
-            entry = registry[rk]
-            registry[rk] = RangeEntry(
-                tick_lower=entry.tick_lower,
-                tick_upper=entry.tick_upper,
-                total_liquidity=entry.total_liquidity + pos.liquidity,
-                swap_count=swap_counts.get(rk, 0),
-                block_registered=min(entry.block_registered, pos.entry_block),
-                position_keys=entry.position_keys + (pos.owner,),
-            )
-    return registry
+def registry_add(
+    range_liq: dict[str, int],
+    range_pos_count: dict[str, int],
+    tl: int, tu: int, liq: int,
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Add liquidity to range registry. Returns (new_liq, new_count)."""
+    rk = _range_key(tl, tu)
+    new_liq = dict(range_liq)
+    new_count = dict(range_pos_count)
+    new_liq[rk] = new_liq.get(rk, 0) + liq
+    new_count[rk] = new_count.get(rk, 0) + 1
+    return new_liq, new_count
+
+
+def registry_remove(
+    range_liq: dict[str, int],
+    range_pos_count: dict[str, int],
+    tl: int, tu: int,
+) -> tuple[dict[str, int], dict[str, int], int]:
+    """
+    Remove a position from range registry.
+    Returns (new_liq, new_count, totalRangeLiq).
+
+    Mirrors Solidity TickRangeRegistryV2.deregister():
+    - totalRangeLiquidity is accumulated on register, NOT decremented per-deregister
+    - Only zeroed when LAST position is removed from the range
+    - deregister() returns the current totalRangeLiquidity (which includes all registered)
+    """
+    rk = _range_key(tl, tu)
+    total = range_liq.get(rk, 0)
+    new_liq = dict(range_liq)
+    new_count = dict(range_pos_count)
+    new_count[rk] = new_count.get(rk, 1) - 1
+    # Only clear when last position removed (matches Solidity line 81-85)
+    if new_count[rk] <= 0:
+        del new_liq[rk]
+        del new_count[rk]
+    return new_liq, new_count, total
 
 
 # ── FCI accumulation on burn ──
@@ -198,7 +210,13 @@ def run_scenario(scenario: Scenario) -> SimulationResult:
     fci = FCIState()
     removals: list[RemovalEntry] = []
 
-    # Track swap counts per range and position entry blocks
+    # Range registry: tracks total liquidity per range (independent of pool positions).
+    # Mirrors Solidity TickRangeRegistryV2: totalRangeLiquidity accumulates on register,
+    # NOT decremented per-deregister, only zeroed when last position removed.
+    range_liq: dict[str, int] = {}
+    range_pos_count: dict[str, int] = {}
+
+    # Track swap counts per range and position entry data
     swap_counts: dict[str, int] = {}
     pos_entry_blocks: dict[str, int] = {}       # agent_id → entry block
     pos_swap_at_entry: dict[str, int] = {}      # agent_id → swap count at entry
@@ -213,6 +231,12 @@ def run_scenario(scenario: Scenario) -> SimulationResult:
             agent = agent_map[action.agent_id]
             pool = step_mint(pool, agent.id, agent.tick_lower, agent.tick_upper, action.liquidity)
             fci = replace(fci, pos_count=fci.pos_count + 1)
+
+            # Update range registry
+            range_liq, range_pos_count = registry_add(
+                range_liq, range_pos_count,
+                agent.tick_lower, agent.tick_upper, action.liquidity,
+            )
 
             rk = _range_key(agent.tick_lower, agent.tick_upper)
             pos_entry_blocks[agent.id] = pool.block_number
@@ -234,18 +258,19 @@ def run_scenario(scenario: Scenario) -> SimulationResult:
             pos = _find_position(pool, agent.id, agent.tick_lower, agent.tick_upper)
             assert pos is not None
 
-            # Compute range totals BEFORE burn
-            total_range_liq = sum(
-                p.liquidity for p in pool.positions
-                if p.tick_lower == agent.tick_lower and p.tick_upper == agent.tick_upper
-            )
-
             block_lifetime = pool.block_number - pos_entry_blocks[agent.id]
             rk = _range_key(agent.tick_lower, agent.tick_upper)
             swap_lifetime = swap_counts.get(rk, 0) - pos_swap_at_entry.get(agent.id, 0)
 
             # Only accumulate on full burns (partial-remove guard)
             if action.liquidity == pos.liquidity:
+                # Get totalRangeLiq from registry (mirrors Solidity deregister —
+                # returns accumulated total, NOT decremented per-position)
+                range_liq, range_pos_count, total_range_liq = registry_remove(
+                    range_liq, range_pos_count,
+                    agent.tick_lower, agent.tick_upper,
+                )
+
                 fci, removal = accumulate_burn(
                     fci, pos.liquidity, total_range_liq,
                     block_lifetime, swap_lifetime,
@@ -261,6 +286,11 @@ def run_scenario(scenario: Scenario) -> SimulationResult:
                 )
                 removals.append(removal)
             else:
+                # Partial burn — update registry but don't accumulate
+                range_liq, range_pos_count, _ = registry_remove(
+                    range_liq, range_pos_count,
+                    agent.tick_lower, agent.tick_upper,
+                )
                 fci = replace(fci, pos_count=fci.pos_count - 1)
 
             pool = step_burn(pool, agent.id, agent.tick_lower, agent.tick_upper, action.liquidity)
