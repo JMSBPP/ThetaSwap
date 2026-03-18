@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A Rust CLI tool (`d2p`) that wraps Foundry's `forge create` and `cast send --create` to deploy ThetaSwap reactive contracts. The first subcommand is `d2p ts reactive <protocol>`, which deploys protocol-specific reactive contracts (starting with UniswapV3Reactive) and outputs the deployed address + tx hash on success. It's a thin, pipe-friendly deployment wrapper that handles Foundry quirks (forge create RPC issues) with automatic fallback.
+A Rust CLI tool (`d2p`) that wraps Foundry's `forge create` and `cast send --create` to deploy ThetaSwap reactive contracts. Ships as `d2p ts reactive uniswap-v3` — a pipe-friendly deployment wrapper that handles Foundry quirks with automatic fallback. 1,011 lines of Rust, 28 tests, zero external runtime dependencies.
 
 ## Core Value
 
@@ -12,60 +12,55 @@ Reliable single-command deployment of reactive contracts with automatic fallback
 
 ### Validated
 
-<!-- Inferred from existing codebase — these capabilities already exist in Solidity -->
-
-- ✓ UniswapV3Reactive contract exists with single-arg constructor (callback address) — `src/fee-concentration-index-v2/protocols/uniswap-v3/UniswapV3Reactive.sol`
-- ✓ FeeConcentrationIndexV2 orchestrator with diamond storage pattern — `src/fee-concentration-index-v2/FeeConcentrationIndexV2.sol`
-- ✓ Protocol facet system (V3, V4) via IFCIProtocolFacet — `src/fee-concentration-index-v2/protocols/`
-- ✓ Reactive Network integration (subscriptions, callbacks, event routing) — `src/fee-concentration-index-v2/protocols/uniswap-v3/UniswapV3Reactive.sol`
-- ✓ Foundry build toolchain configured (foundry.toml, remappings, profiles) — `foundry.toml`
-- ✓ Live deployments on Sepolia + Lasna verified working — memory: V2 deployment details
+- ✓ `d2p ts reactive uniswap-v3` deploys UniswapV3Reactive — v1.0
+- ✓ CLI accepts `--rpc-url`, `--private-key`, `--callback`, `--value`, `--project` flags — v1.0
+- ✓ Primary path: `forge create` with `--broadcast --legacy` baked in — v1.0
+- ✓ Fallback path: `cast send --create` on forge failure — v1.0
+- ✓ Stdout: deployed address + tx hash (pipe-friendly) — v1.0
+- ✓ Stderr: error messages, non-zero exit — v1.0
+- ✓ Env var fallback: `ETH_RPC_URL`, `ETH_PRIVATE_KEY` — v1.0
+- ✓ Human-friendly `--value` parsing (10react, 0.01ether) — v1.0
+- ✓ Post-deploy receipt verification (`cast receipt --json`) — v1.0
+- ✓ Foundry PATH check on startup — v1.0
 
 ### Active
 
-<!-- CLI tool scope — what we're building -->
-
-- [ ] `d2p ts reactive uniswap-v3` deploys UniswapV3Reactive with callback address constructor arg
-- [ ] CLI accepts `--rpc-url`, `--private-key`, `--callback`, and `--value` flags
-- [ ] Primary path: `forge create` with `--broadcast --legacy` flags baked in
-- [ ] Fallback path: if `forge create` reverts, try-catch to `cast send --create` with identical bytecode + constructor args
-- [ ] On success: stdout prints deployed contract address + tx hash (pipe-friendly)
-- [ ] On failure: clear error message to stderr, non-zero exit code
-- [ ] CLI is a Rust binary using clap for arg parsing
+(None — planning next milestone)
 
 ### Out of Scope
 
 - Other `d2p ts` subcommands beyond `reactive` — future milestone
-- Protocol support beyond `uniswap-v3` — future milestone (structure should allow it)
-- Contract verification (etherscan/blockscout) post-deploy — separate concern
-- Interactive prompts or TUI — this is a pipe-friendly CLI
-- Wallet management or keystore integration — raw private key via flag for now
+- Protocol support beyond `uniswap-v3` — future milestone (structure allows it)
+- Contract verification (etherscan/blockscout) — use `forge verify-contract`
+- Interactive prompts or TUI — pipe-friendly CLI
+- Wallet/keystore integration — raw private key via flag/env
+- `--json` output mode — v1.x
+- `react` → wei unit conversion (Foundry doesn't recognize "react") — v1.x
 
 ## Context
 
-- The existing codebase is a Solidity project (Foundry-based) with a complex multi-protocol hook system
-- `forge create --rpc-url` sometimes silently ignores the RPC flag, requiring fallback to `cast send --create`
-- Deployments to Reactive Network (Lasna) require `--legacy` flag
-- UniswapV3Reactive constructor is `payable` — needs `--value` to fund `depositToSystem` at deploy time
-- The Rust CLI lives in this same repo, likely under a `cli/` or `d2p/` directory
-- Foundry tools (`forge`, `cast`) must be available on PATH
+- Shipped v1.0 with 1,011 LOC Rust in `d2p/` directory
+- Tech stack: clap 4.5, anyhow 1.x, thiserror 2.x, serde/serde_json
+- 28 unit tests covering arg parsing, fallback logic, receipt verification
+- Foundry "react" denomination not supported — use "ether" or raw wei for now
 
 ## Constraints
 
-- **Language**: Rust — user specified
-- **Dependencies**: Must have `forge` and `cast` on PATH (Foundry toolchain)
-- **Solidity compiler**: Existing `foundry.toml` config used for compilation (solc 0.8.26, via_ir, cancun)
-- **Output format**: Address + tx hash on stdout, errors on stderr — pipe-friendly
-- **Constructor**: UniswapV3Reactive takes `address callback_` and is `payable`
+- **Language**: Rust
+- **Dependencies**: `forge` and `cast` on PATH (Foundry toolchain)
+- **Build**: `foundry.toml` at project root for Solidity compilation
+- **Output**: Address + tx hash on stdout, errors on stderr
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Rust for CLI | User specified; good for CLI tooling, single binary distribution | — Pending |
-| forge create as primary, cast send as fallback | forge create sometimes ignores --rpc-url; cast send --create is more reliable | — Pending |
-| --broadcast and --legacy baked in | Always needed for reactive deployments; reduces user error | — Pending |
-| Pipe-friendly output (address + tx hash) | Enables scripting and composability with other tools | — Pending |
+| Rust for CLI | Single binary, no runtime | ✓ Good |
+| forge create primary, cast send fallback | forge create sometimes ignores --rpc-url | ✓ Good |
+| --legacy baked into forge create only | Required for Lasna; not needed for cast send | ✓ Good |
+| run()/main() split pattern | Full control over stderr format and exit codes | ✓ Good |
+| parse_value() free function | No third-party crate needed for unit validation | ✓ Good |
+| after_help for examples | long_about not rendered in nested subcommands | ✓ Good (fixed during UAT) |
 
 ---
-*Last updated: 2026-03-17 after initialization*
+*Last updated: 2026-03-18 after v1.0 milestone*
