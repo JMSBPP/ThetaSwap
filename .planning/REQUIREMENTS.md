@@ -63,31 +63,31 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROB-01 | Phase ? | Pending |
-| PROB-02 | Phase ? | Pending |
-| PROB-03 | Phase ? | Pending |
-| ARCH-01 | Phase ? | Pending |
-| ARCH-02 | Phase ? | Pending |
-| ARCH-03 | Phase ? | Pending |
-| ROOT-01 | Phase ? | Pending |
-| ROOT-02 | Phase ? | Pending |
-| ROOT-03 | Phase ? | Pending |
-| RREAD-01 | Phase ? | Pending |
-| RREAD-02 | Phase ? | Pending |
-| RREAD-03 | Phase ? | Pending |
-| DEMO-01 | Phase ? | Pending |
-| DEMO-02 | Phase ? | Pending |
-| BEAM-01 | Phase ? | Pending |
-| BEAM-02 | Phase ? | Pending |
-| BEAM-03 | Phase ? | Pending |
-| BEAM-04 | Phase ? | Pending |
-| BEAM-05 | Phase ? | Pending |
+| PROB-01 | Phase 1 | Pending |
+| PROB-02 | Phase 1 | Pending |
+| PROB-03 | Phase 1 | Pending |
+| ARCH-01 | Phase 2 | Pending |
+| ARCH-02 | Phase 2 | Pending |
+| ARCH-03 | Phase 2 | Pending |
+| ROOT-01 | Phase 3 | Pending |
+| ROOT-02 | Phase 3 | Pending |
+| ROOT-03 | Phase 3 | Pending |
+| RREAD-01 | Phase 3 | Pending |
+| RREAD-02 | Phase 3 | Pending |
+| RREAD-03 | Phase 3 | Pending |
+| DEMO-01 | Phase 3 | Pending |
+| DEMO-02 | Phase 3 | Pending |
+| BEAM-01 | Phase 4 | Pending |
+| BEAM-02 | Phase 4 | Pending |
+| BEAM-03 | Phase 4 | Pending |
+| BEAM-04 | Phase 4 | Pending |
+| BEAM-05 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after output format revision (Beamer + dual README)*
+*Last updated: 2026-03-18 after roadmap revision (Beamer + dual README)*
