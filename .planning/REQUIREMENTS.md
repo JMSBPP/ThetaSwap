@@ -17,36 +17,37 @@
 - [ ] **ARCH-02**: Sequence diagram (mermaid) for pool listening flow: listenPool() -> swap/mint/burn events -> metric update -> DeltaPlus derivation
 - [ ] **ARCH-03**: Diagrams render correctly in GitHub README markdown
 
-### README Updates
+### Root README
 
-- [ ] **READ-01**: README.md has an Architecture section with both mermaid diagrams embedded
-- [ ] **READ-02**: README architecture section is accessible to mixed (technical + non-technical) audience
+- [ ] **ROOT-01**: Root README.md has brief project description and Architecture section with both mermaid diagrams
+- [ ] **ROOT-02**: Root README contains strategic pointers to sections of interest (research/, src/, test/)
+- [ ] **ROOT-03**: Root README is accessible to mixed audience — brief, high-level, not dense
+
+### Research README
+
+- [ ] **RREAD-01**: research/README.md provides detailed research summary (problem, methodology, key findings)
+- [ ] **RREAD-02**: research/README.md has pointers to actual artifacts: notebooks, econometrics modules, model LaTeX, data fixtures
+- [ ] **RREAD-03**: research/README.md organized by research domain (econometrics, backtest, model, data)
 
 ### Demo
 
 - [ ] **DEMO-01**: Demo script documented — runs NativeV4FeeConcentrationIndex.integration.t.sol with forge command
 - [ ] **DEMO-02**: Demo shows FCI tracking through real swap/mint/burn scenarios on V4
 
-### Roadmap Content
+### Beamer Slides
 
-- [ ] **ROAD-01**: Roadmap slide lists missing CFMM implementation (linearized power-squared trading function)
-- [ ] **ROAD-02**: Roadmap slide lists missing vault/settlement mechanism
-- [ ] **ROAD-03**: Roadmap framed as clear next steps, not blockers
-
-### Slide Content
-
-- [ ] **SLID-01**: Problem slide content synthesized from research
-- [ ] **SLID-02**: Research summary slide content (approach, key results, demand identification)
-- [ ] **SLID-03**: Solution slide content with architecture diagram reference
-- [ ] **SLID-04**: Demo slide content with instructions
-- [ ] **SLID-05**: Roadmap slide content with missing pieces
+- [ ] **BEAM-01**: LaTeX Beamer .tex file with problem frame(s) synthesized from research
+- [ ] **BEAM-02**: LaTeX Beamer research summary frame(s) (approach, key results, demand identification)
+- [ ] **BEAM-03**: LaTeX Beamer solution frame(s) with architecture diagram reference
+- [ ] **BEAM-04**: LaTeX Beamer demo frame(s) with run instructions
+- [ ] **BEAM-05**: LaTeX Beamer roadmap frame(s) — missing CFMM, missing vault/settlement, framed as next steps
 
 ## v2 Requirements
 
 ### Extended Presentation
 
 - **EPRE-01**: Video recording of demo walkthrough
-- **EPRE-02**: Appendix slides with full econometric tables
+- **EPRE-02**: Appendix frames with full econometric tables
 - **EPRE-03**: Interactive notebook demo (Jupyter) for live audience
 
 ## Out of Scope
@@ -56,7 +57,6 @@
 | New Solidity contracts | Presentation prep only — no contract changes |
 | CFMM implementation | Roadmap item to mention, not deliver |
 | Vault/settlement implementation | Roadmap item to mention, not deliver |
-| Slide tool formatting | We produce markdown content, not Keynote/Slides files |
 | Re-running econometrics | Research is complete, we synthesize existing results |
 
 ## Traceability
@@ -69,24 +69,25 @@
 | ARCH-01 | Phase ? | Pending |
 | ARCH-02 | Phase ? | Pending |
 | ARCH-03 | Phase ? | Pending |
-| READ-01 | Phase ? | Pending |
-| READ-02 | Phase ? | Pending |
+| ROOT-01 | Phase ? | Pending |
+| ROOT-02 | Phase ? | Pending |
+| ROOT-03 | Phase ? | Pending |
+| RREAD-01 | Phase ? | Pending |
+| RREAD-02 | Phase ? | Pending |
+| RREAD-03 | Phase ? | Pending |
 | DEMO-01 | Phase ? | Pending |
 | DEMO-02 | Phase ? | Pending |
-| ROAD-01 | Phase ? | Pending |
-| ROAD-02 | Phase ? | Pending |
-| ROAD-03 | Phase ? | Pending |
-| SLID-01 | Phase ? | Pending |
-| SLID-02 | Phase ? | Pending |
-| SLID-03 | Phase ? | Pending |
-| SLID-04 | Phase ? | Pending |
-| SLID-05 | Phase ? | Pending |
+| BEAM-01 | Phase ? | Pending |
+| BEAM-02 | Phase ? | Pending |
+| BEAM-03 | Phase ? | Pending |
+| BEAM-04 | Phase ? | Pending |
+| BEAM-05 | Phase ? | Pending |
 
 **Coverage:**
-- v1 requirements: 18 total
+- v1 requirements: 19 total
 - Mapped to phases: 0
-- Unmapped: 18
+- Unmapped: 19
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after initial definition*
+*Last updated: 2026-03-18 after output format revision (Beamer + dual README)*
