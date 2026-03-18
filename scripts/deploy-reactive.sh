@@ -26,11 +26,17 @@ if [ "$STATUS" != "0x1" ]; then
 fi
 echo "Reactive: $ADDR" >&2
 
+# Wait for deploy tx to confirm
+sleep 5
+
 # Register pool
 echo "Registering pool..." >&2
 cast send --rpc-url "$RPC" --private-key "$PK" --gas-limit 300000 \
     "$ADDR" "registerPool(uint256,address)" 11155111 "$V3_POOL" >&2
 echo "Pool registered" >&2
+
+# Wait for register tx to confirm
+sleep 5
 
 # Fund via fund()
 echo "Funding reactive..." >&2
