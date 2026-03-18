@@ -55,12 +55,11 @@ Plans:
   2. Root README is accessible to a mixed audience -- brief and high-level, not dense
   3. research/README.md provides detailed research summary organized by domain (econometrics, backtest, model, data) with pointers to actual artifacts (notebooks, modules, LaTeX, fixtures)
   4. A developer unfamiliar with the project can find and run the demo test using only the documented forge command, and the demo shows FCI tracking through swap, mint, and burn scenarios on V4
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md — Write root README.md with overview, architecture diagrams, demo section, and directory pointers
+- [ ] 03-02-PLAN.md — Write research/README.md organized by domain with artifact links and collapsible equation blocks
 
 ### Phase 4: Beamer Slide Deck
 **Goal**: Complete LaTeX Beamer .tex file exists with all presentation frames -- compilable to PDF
@@ -87,5 +86,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Problem & Research Narrative | 0/2 | Complete    | 2026-03-18 |
 | 2. Architecture Diagrams | 0/1 | Complete    | 2026-03-18 |
-| 3. Repository Artifacts | 0/3 | Not started | - |
+| 3. Repository Artifacts | 0/2 | Not started | - |
 | 4. Beamer Slide Deck | 0/2 | Not started | - |
