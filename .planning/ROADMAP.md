@@ -86,5 +86,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Problem & Research Narrative | 0/2 | Complete    | 2026-03-18 |
 | 2. Architecture Diagrams | 0/1 | Complete    | 2026-03-18 |
-| 3. Repository Artifacts | 2/2 | Complete   | 2026-03-18 |
+| 3. Repository Artifacts | 2/2 | Complete    | 2026-03-18 |
 | 4. Beamer Slide Deck | 0/2 | Not started | - |
