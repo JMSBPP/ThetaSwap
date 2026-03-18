@@ -29,13 +29,13 @@ echo "Reactive: $ADDR" >&2
 # Register pool
 echo "Registering pool..." >&2
 cast send --rpc-url "$RPC" --private-key "$PK" --gas-limit 300000 \
-    "$ADDR" "registerPool(uint256,address)" 11155111 "$V3_POOL" >/dev/null 2>&1
+    "$ADDR" "registerPool(uint256,address)" 11155111 "$V3_POOL" >&2
 echo "Pool registered" >&2
 
 # Fund via fund()
 echo "Funding reactive..." >&2
 cast send --rpc-url "$RPC" --private-key "$PK" --value 5ether \
-    "$ADDR" "fund()" >/dev/null 2>&1
+    "$ADDR" "fund()" >&2
 echo "Funded" >&2
 
 # Write address to file for Solidity to read
