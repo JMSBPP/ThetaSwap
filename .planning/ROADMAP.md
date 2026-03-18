@@ -71,11 +71,11 @@ Plans:
   3. Solution frame(s) reference the architecture diagram and explain FCI Hook, reactive adapter, and cross-protocol design
   4. Demo frame(s) include step-by-step instructions for running and narrating the integration test
   5. Roadmap frame(s) list missing CFMM and vault/settlement as clear next steps, not blockers
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Create Beamer skeleton with preamble, title frame, 2 problem frames, and 3 evidence frames
+- [ ] 04-02-PLAN.md — Add 2 solution frames, demo frame, roadmap frame, and verify pdflatex compilation
 
 ## Progress
 
@@ -87,4 +87,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Problem & Research Narrative | 0/2 | Complete    | 2026-03-18 |
 | 2. Architecture Diagrams | 0/1 | Complete    | 2026-03-18 |
 | 3. Repository Artifacts | 2/2 | Complete    | 2026-03-18 |
-| 4. Beamer Slide Deck | 0/2 | Not started | - |
+| 4. Beamer Slide Deck | 0/2 | Planned | - |
