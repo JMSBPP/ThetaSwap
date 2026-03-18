@@ -65,4 +65,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Crate Foundation | 1/1 | Complete    | 2026-03-18 |
 | 2. Deploy Logic | 2/2 | Complete    | 2026-03-18 |
-| 3. CLI Wiring | 1/1 | Complete   | 2026-03-18 |
+| 3. CLI Wiring | 1/1 | Complete    | 2026-03-18 |
