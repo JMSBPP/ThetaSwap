@@ -68,7 +68,10 @@ forge script "${TEST_FILE}:${CONTRACT}" \
     -vv
 
 CALLBACK=$(python3 -c "import json; print(json.load(open('$STATE_FILE'))['callback'])")
+# Read FRESH pool address from state (deploy() creates a new pool each run)
+V3_POOL=$(python3 -c "import json; print(json.load(open('$STATE_FILE'))['v3Pool'])")
 echo "Callback: $CALLBACK"
+echo "V3 Pool:  $V3_POOL"
 echo ""
 
 # ── Phase 2: Deploy Reactive on Lasna (dedicated EOA → clean ReactVM) ──
