@@ -56,16 +56,9 @@ make sol-test-demo   # NativeV4 FCI integration scenarios (full trace)
 ## Python (Econometrics + Backtest)
 
 ```bash
-# Activate venv
-source uhi8/bin/activate
-
-# Run Python tests
-make test-py
-# or directly:
-PYTHONPATH=research pytest research/tests -v
-
-# Execute all notebooks headless
-make notebooks
+make test-py         # run Python tests
+make notebooks       # execute all notebooks headless
+make verify-data     # verify frozen dataset integrity
 ```
 
 Research code lives in `research/`:
@@ -74,29 +67,6 @@ Research code lives in `research/`:
 - `research/data/` — cached Dune query results
 - `research/notebooks/` — reproducible result notebooks
 - `research/tests/` — Python test suite
-
-### Manual Python Setup (without Make)
-
-```bash
-uv venv uhi8 --python 3.13
-source uhi8/bin/activate
-uv pip install --python uhi8/bin/python -e ".[dev]"
-
-# For notebooks: register a Jupyter kernel
-python -m ipykernel install --user --name=thetaswap \
-    --env PYTHONPATH "$(pwd)/research"
-```
-
-### Running Notebooks
-
-Notebooks expect a kernel with `PYTHONPATH` pointing to `research/`. The `make install` command sets this up automatically. To run interactively:
-
-```bash
-source uhi8/bin/activate
-jupyter lab --notebook-dir=research/notebooks
-```
-
-Select the **thetaswap** kernel when opening notebooks.
 
 ## Project Structure
 
