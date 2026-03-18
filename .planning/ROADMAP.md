@@ -35,7 +35,11 @@ Plans:
   3. `cast receipt <txhash> --field status` is called after every deployment and returns `0x1` before output is returned
   4. Stdout of `DeployOutput::display()` contains only the deployed address and tx hash — no diagnostic noise
   5. If `forge` or `cast` are not on PATH, the call fails immediately with an actionable error message
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — primary.rs (forge create) + fallback.rs (cast send --create) with arg-order and JSON parsing tests
+- [ ] 02-02-PLAN.md — verify.rs (cast receipt --json) + Runner orchestration + check_prerequisites() in mod.rs
 
 ### Phase 3: CLI Wiring
 **Goal**: Complete `d2p` binary where `d2p ts reactive uniswap-v3` accepts all documented flags and env vars, invokes the Phase 2 runner, and exits cleanly
@@ -57,5 +61,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Crate Foundation | 1/1 | Complete    | 2026-03-18 |
-| 2. Deploy Logic | 0/? | Not started | - |
+| 2. Deploy Logic | 0/2 | Not started | - |
 | 3. CLI Wiring | 0/? | Not started | - |
