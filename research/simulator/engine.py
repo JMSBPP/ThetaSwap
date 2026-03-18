@@ -12,6 +12,7 @@ from typing import Sequence
 from .types import (
     Action, ActionType, PoolState, Position, FCIState,
     RangeEntry, RemovalEntry, SimulationResult, Scenario,
+    FCIMetrics, RangeSnapshotExpected, PositionExpected,
 )
 from .metrics import (
     Q128, floor_one, compute_x_k, compute_x_k_squared,
@@ -295,7 +296,50 @@ def run_scenario(scenario: Scenario) -> SimulationResult:
 
             pool = step_burn(pool, agent.id, agent.tick_lower, agent.tick_upper, action.liquidity)
 
+    # Build per-range snapshots from registry state at end
+    range_snapshots: list[RangeSnapshotExpected] = []
+    for rk_str, total_liq in range_liq.items():
+        tl, tu = (int(x) for x in rk_str.split(":"))
+        # Collect position keys still in this range
+        pos_keys = tuple(
+            pos.owner for pos in pool.positions
+            if pos.tick_lower == tl and pos.tick_upper == tu
+        )
+        range_snapshots.append(RangeSnapshotExpected(
+            tick_lower=tl,
+            tick_upper=tu,
+            total_liquidity=total_liq,
+            swap_count=swap_counts.get(rk_str, 0),
+            position_count=len(pos_keys),
+            position_keys=pos_keys,
+        ))
+
+    # Build per-position expected state for active positions
+    position_snapshots: list[PositionExpected] = []
+    for pos in pool.positions:
+        agent_id = pos.owner
+        rk = _range_key(pos.tick_lower, pos.tick_upper)
+        swap_at_entry = pos_swap_at_entry.get(agent_id, 0)
+        current_swaps = swap_counts.get(rk, 0)
+        position_snapshots.append(PositionExpected(
+            pos_key=agent_id,
+            fee_growth_baseline=pos.fee_growth_inside_last,
+            add_block=pos_entry_blocks.get(agent_id, 0),
+            swap_lifetime=current_swaps - swap_at_entry,
+        ))
+
     metrics = fci_state_to_metrics(fci)
+    metrics = FCIMetrics(
+        accumulated_sum=metrics.accumulated_sum,
+        index_a=metrics.index_a,
+        theta_sum=metrics.theta_sum,
+        removed_pos_count=metrics.removed_pos_count,
+        at_null=metrics.at_null,
+        delta_plus=metrics.delta_plus,
+        epochs=metrics.epochs,
+        ranges=tuple(range_snapshots),
+        positions=tuple(position_snapshots),
+    )
 
     return SimulationResult(
         scenario=replace(scenario, expected=metrics),

@@ -32,6 +32,7 @@ import {sortTicks} from "@libraries/HookUtilsMod.sol";
 import {LibCall} from "solady/utils/LibCall.sol";
 import {requireOwner, initOwner} from "@fee-concentration-index-v2/modules/dependencies/LibOwner.sol";
 import {LiquidityPositionSnapshot} from "@fee-concentration-index-v2/types/LiquidityPositionSnapshot.sol";
+import {RangeSnapshot} from "@fee-concentration-index-v2/types/RangeSnapshot.sol";
 import {PositionConfig} from "@uniswap/v4-periphery/src/libraries/PositionConfig.sol";
 import {thetaWeight} from "@types/BlockCountExt.sol";
 
@@ -363,6 +364,53 @@ contract FeeConcentrationIndexV2 {
 
     function getRegisteredProtocolFacet(bytes2 flags) external view returns (IFCIProtocolFacet) {
         return getProtocolFacet(flags);
+    }
+
+    // ── Registry reads (delegated to facet via delegatecall) ──
+
+    function getRegistryAllSnapshots(PoolKey calldata key, bytes2 flags) external returns (RangeSnapshot[] memory) {
+        address facet_ = address(getProtocolFacet(flags));
+        PoolId poolId = PoolIdLibrary.toId(key);
+        return abi.decode(
+            LibCall.delegateCallContract(facet_, abi.encodeCall(IFCIProtocolFacet.getRegistryAllSnapshots, (flags, poolId))),
+            (RangeSnapshot[])
+        );
+    }
+
+    function getRegistryActiveRanges(PoolKey calldata key, bytes2 flags) external returns (TickRange[] memory) {
+        address facet_ = address(getProtocolFacet(flags));
+        PoolId poolId = PoolIdLibrary.toId(key);
+        return abi.decode(
+            LibCall.delegateCallContract(facet_, abi.encodeCall(IFCIProtocolFacet.getRegistryActiveRanges, (flags, poolId))),
+            (TickRange[])
+        );
+    }
+
+    function getRegistryPositionBaseline(PoolKey calldata key, bytes2 flags, bytes32 posKey) external returns (uint256) {
+        address facet_ = address(getProtocolFacet(flags));
+        PoolId poolId = PoolIdLibrary.toId(key);
+        return abi.decode(
+            LibCall.delegateCallContract(facet_, abi.encodeCall(IFCIProtocolFacet.getRegistryPositionBaseline, (flags, poolId, posKey))),
+            (uint256)
+        );
+    }
+
+    function getRegistryPositionAddBlock(PoolKey calldata key, bytes2 flags, bytes32 posKey) external returns (uint256) {
+        address facet_ = address(getProtocolFacet(flags));
+        PoolId poolId = PoolIdLibrary.toId(key);
+        return abi.decode(
+            LibCall.delegateCallContract(facet_, abi.encodeCall(IFCIProtocolFacet.getRegistryPositionAddBlock, (flags, poolId, posKey))),
+            (uint256)
+        );
+    }
+
+    function getRegistryPositionSwapLifetime(PoolKey calldata key, bytes2 flags, bytes32 posKey) external returns (uint256) {
+        address facet_ = address(getProtocolFacet(flags));
+        PoolId poolId = PoolIdLibrary.toId(key);
+        return abi.decode(
+            LibCall.delegateCallContract(facet_, abi.encodeCall(IFCIProtocolFacet.getRegistryPositionSwapLifetime, (flags, poolId, posKey))),
+            (uint256)
+        );
     }
 
     // ── IERC165 ──
