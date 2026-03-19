@@ -198,17 +198,32 @@ Lag & $\hat{\beta}_1$ (linear) & $p$ & $\hat{\beta}_2$ (quadratic) & $p$ & Turni
 \end{tabular}
 \end{center}
 
-\bigskip
+\medskip
 
-\textit{At lag 3, passive LPs exhibit statistically significant hedging demand:
-$\hat{\beta}_1 = -32.44$, $\hat{\beta}_2 = +205.34$ ($p = 0.004$), turning
-point $\DeltaStar = 0.079$. At $\Delta = 0.15$, each $0.01$ increase in
-concentration raises exit probability by ${\sim}2.3$ percentage points ---
-implying a willingness to pay of \$110 per position per event.}
+{\footnotesize For detailed data curation, specification tests, and robustness
+checks, see \texttt{research/model/main.pdf}.}
 
 \end{frame}
 
-% ── Frame 7: Evidence — Answers ──────────────────────────────────────────────
+% ── Frame 7: Evidence — What the Data Says ───────────────────────────────────
+\begin{frame}{What the Data Says}
+
+\textit{Passive LPs respond to concentration shocks within one to three days.
+When fee dispersion exceeds 8--9\% above the competitive equilibrium, the
+shelter effect reverses: each additional percentage point of concentration
+raises exit probability by approximately (%include from the tabel ho this number was obtaine d  meaingn a/b2.3 same for the 15% and 110)2.3 percentage points. At a fee
+dispersion level of 15\% above equilibrium, the implied willingness to pay
+for protection is \textbf{\$110 per position per event}.}
+
+\bigskip
+
+This establishes both the \textbf{existence of demand} (the inverted-U with
+a statistically significant adverse regime) and a \textbf{concrete price}
+(the marginal effect translated to an insurance premium).
+
+\end{frame}
+
+% ── Frame 8: Evidence — Answers ──────────────────────────────────────────────
 \begin{frame}{Answers}
 
 \begin{center}
@@ -218,60 +233,86 @@ implying a willingness to pay of \$110 per position per event.}
 Question & Finding \\
 \midrule
 Is there demand for hedging adverse competition?
-  & \textbf{Yes.} Quadratic deviation model: $\beta_1 < 0$ (shelter),
-    $\beta_2 > 0$ (exit), both significant at lags 1--3 ($p < 0.03$).
-    Turning point $\DeltaStar \approx 0.08$--$0.09$. \\
+  & \textbf{Yes.} LPs react to concentration shocks within days. Below
+    a threshold, concentration is protective; above it, adverse competition
+    drives exits with high statistical significance. \\
 
 What is the price?
-  & At $\Delta = 0.15$: implied premium \textbf{\$110 per position}.
-    Marginal effect $= 2.27$ --- each 0.01 $\Delta$ raises exit probability
-    by 2.3 pp. \\
+  & When fee dispersion exceeds 15\% above equilibrium, the implied premium
+    is \textbf{\$110 per position} --- the willingness to pay derived from
+    the exit hazard marginal effect. \\
 
 Does hedging improve outcomes?
-  & Backtest ($p^2$ payoff, $R_0 = \$200$K):
-    \textbf{18.8\%} of positions better off, mean hedge value
-    \textbf{+\$23.21}. \\
+  & Historical replay with a power-squared payoff and \$200K seed capital:
+    \textbf{18.8\%} of positions are better off hedged, with a mean hedge
+    value of \textbf{+\$23.21}. \\
 \bottomrule
 \end{tabular}
 \end{center}
 
+\medskip
+{\footnotesize Full econometric treatment, backtest methodology, and payoff
+comparison in \texttt{research/model/main.pdf}.}
+
 \end{frame}
 
-% ── Frame 6: Evidence — The Inverted-U ───────────────────────────────────────
-\begin{frame}{The Inverted-U}
+% ── Frame 9: Evidence — The Inverted-U (Dose-Response) ──────────────────────
+\begin{frame}{Tail Risk: The Inverted-U}
 
 \begin{columns}[T]
 
 \begin{column}{0.50\textwidth}
-\textbf{Two regimes:}
+The dose-response plot reveals the nonlinear structure:
+
+\begin{itemize}
+  \item Exit rates are \textbf{stable at baseline} when concentration
+    is at or below the competitive null (Q1--Q2)
+  \item They \textbf{spike} at moderate concentration (Q3) ---
+    the adverse regime activates
+  \item At extreme concentration (Q4), exits drop --- these rare events
+    are driven by volume spikes that benefit all LPs
+\end{itemize}
 
 \medskip
 
-\begin{enumerate}
-  \item \textbf{Shelter} ($\Delta < 0.09$) \\
-    Mild concentration is protective --- elevated volume benefits all LPs.
-
-  \medskip
-
-  \item \textbf{Capponi} ($\Delta > 0.09$) \\
-    Extreme concentration drives exits --- passive LP fee rate drops below
-    exit threshold.
-\end{enumerate}
-
-\bigskip
-
-Turning point:
-\[
-  \DeltaStar = \frac{-\beta_1}{2\beta_2} = \frac{23.18}{2 \times 129.20} = 0.090
-\]
-
-At $\Delta = 0.15$: marginal effect $= 2.27$ \\
-{\small Each 0.01 increase raises exit probability by ${\sim}2.3$ pp}
+This is the signature of a \textbf{classic insurable tail risk}: rare,
+severe, and distinct from price-driven losses.
 \end{column}
 
 \begin{column}{0.45\textwidth}
 \begin{center}
 \includegraphics[width=\textwidth]{../figures/dose-response.png}
+\end{center}
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+% ── Frame 10: Evidence — Tail Risk Confirmation ─────────────────────────────
+\begin{frame}{Tail Risk Confirmation}
+
+\begin{columns}[T]
+
+\begin{column}{0.50\textwidth}
+Daily concentration deviation over 41 days:
+
+\begin{itemize}
+  \item 63\% of days have $\DeltaPlus > 0$ (some concentration)
+  \item \textbf{Only 1 day in 41} exceeds the turning point $\DeltaStar$
+  \item On that day, $\DeltaPlus$ jumped from near-zero to \textbf{0.158}
+\end{itemize}
+
+\medskip
+
+\textbf{Rare but severe} --- the adverse regime is a tail event.
+A small, predictable premium protects against low-probability,
+high-impact concentration spikes.
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{center}
+\includegraphics[width=\textwidth]{../figures/trigger-days.png}
 \end{center}
 \end{column}
 
