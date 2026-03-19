@@ -7,9 +7,6 @@ out/
 /broadcast/*/31337/
 /broadcast/**/dry-run/
 
-# Docs
-docs/
-
 # AI utilities and generated content
 aiUtils/
 !aiUtils/foundryAssistant/out/
@@ -113,5 +110,13 @@ tmp/
 *.toc
 *.nav
 *.snm
-!research/**/*.log
 out-sol/
+
+# Personal scratch
+notes/
+
+# LaTeX .vrb artifacts
+*.vrb
+
+# Stray venvs
+list/
