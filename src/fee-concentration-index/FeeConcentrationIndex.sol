@@ -8,7 +8,7 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
 import {SwapParams, ModifyLiquidityParams} from "v4-core/src/types/PoolOperation.sol";
-import {TickRange, fromTicks} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeMod.sol";
+import {TickRange, fromTicks} from "typed-uniswap-v4/types/TickRangeMod.sol";
 import {derivePoolAndPosition, sortTicks} from "../libraries/HookUtilsMod.sol";
 import {
     FeeConcentrationIndexStorage, fciStorage, reactiveFciStorage, _poolManager
@@ -16,25 +16,29 @@ import {
 import {
     writeCacheTick, readCacheTick,
     writeCacheRemovalData, readCacheRemovalData
-} from "../reactive-integration/libraries/FeeConcentrationIndexStorageExt.sol";
+} from "@libraries/FeeConcentrationIndexStorageExt.sol";
 import {
     registerPosition, setFeeGrowthBaseline, getFeeGrowthBaseline, deleteFeeGrowthBaseline,
     deregisterPosition, addStateTerm, incrementPosCount, decrementPosCount,
     incrementOverlappingRanges
-} from "../reactive-integration/modules/FeeConcentrationIndexStorageMultiProtocolReactiveExtMod.sol";
-import {CalldataReader, CalldataReaderLib} from "angstrom/src/types/CalldataReader.sol";
-import {TickRangeRegistryLib} from "typed-uniswap-v4/fee-concentration-index/types/TickRangeRegistryMod.sol";
+} from "@protocol-adapter/modules/ProtocolAdapterMod.sol";
+import {CalldataReader, CalldataReaderLib} from "@types/CalldataReader.sol";
+import {TickRangeRegistryLib} from "typed-uniswap-v4/types/TickRangeRegistryMod.sol";
 import {
     getCurrentTick,
     getPositionFeeGrowthInsideLast0,
     getFeeGrowthInside0
-} from "../reactive-integration/libraries/FeeGrowthReaderExt.sol";
-import {FeeShareRatio, fromFeeGrowth, fromFeeGrowthDelta} from "typed-uniswap-v4/fee-concentration-index/types/FeeShareRatioMod.sol";
-import {FeeConcentrationState} from "typed-uniswap-v4/fee-concentration-index/types/FeeConcentrationStateMod.sol";
-import {SwapCount} from "typed-uniswap-v4/fee-concentration-index/types/SwapCountMod.sol";
-import {BlockCount} from "typed-uniswap-v4/fee-concentration-index/types/BlockCountMod.sol";
+} from "@libraries/FeeGrowthReaderExt.sol";
+import {FeeShareRatio, fromFeeGrowth, fromFeeGrowthDelta} from "typed-uniswap-v4/types/FeeShareRatioMod.sol";
+import {FeeConcentrationState} from "typed-uniswap-v4/types/FeeConcentrationStateMod.sol";
+import {SwapCount} from "typed-uniswap-v4/types/SwapCountMod.sol";
+import {BlockCount} from "typed-uniswap-v4/types/BlockCountMod.sol";
 import {IFeeConcentrationIndex} from "./interfaces/IFeeConcentrationIndex.sol";
 import {IERC165} from "forge-std/interfaces/IERC165.sol";
+import {
+    FeeConcentrationEpochStorage, epochFciStorage,
+    addEpochTerm, epochDeltaPlus, initializeEpoch
+} from "./modules/FeeConcentrationEpochStorageMod.sol";
 
 // Fee Concentration Index — HookFacet (no BaseHook, no inheritance beyond interfaces).
 // Deployed as a facet in MasterHook diamond — runs via delegatecall.
@@ -57,8 +61,10 @@ contract FeeConcentrationIndex {
         BalanceDelta,
         bytes calldata hookData
     ) external virtual returns (bytes4, BalanceDelta) {
+	// protocol(protocolFlag(hookData)).positionKey(hookData,sender,params)
         (PoolId poolId, bytes32 positionKey) = derivePoolAndPosition(sender, key, params, hookData);
         TickRange rk = fromTicks(params.tickLower, params.tickUpper);
+	// protocol(protocolFlag(hookData)).latestPositionFeeGrowthInside(hookData,poolId)
        (uint128 posLiquidity,) = getPositionFeeGrowthInsideLast0(hookData, _poolManager(), poolId, positionKey);
        registerPosition(hookData, poolId, rk, positionKey, params.tickLower, params.tickUpper, posLiquidity);
 
@@ -163,6 +169,7 @@ contract FeeConcentrationIndex {
         if (!swapLifetime.isZero()) {
             uint256 xSquaredQ128 = xk.square();
             addStateTerm(hookData, poolId, blockLifetime, xSquaredQ128);
+            addEpochTerm(poolId, blockLifetime, xSquaredQ128);
         }
         decrementPosCount(hookData, poolId);
         deleteFeeGrowthBaseline(hookData, poolId, positionKey);
@@ -193,6 +200,18 @@ contract FeeConcentrationIndex {
     function getThetaSum(PoolKey calldata key, bool reactive) external view returns (uint256 thetaSum_) {
         FeeConcentrationIndexStorage storage $ = reactive ? reactiveFciStorage() : fciStorage();
         thetaSum_ = $.fciState[PoolIdLibrary.toId(key)].thetaSum;
+    }
+
+    function getDeltaPlusEpoch(PoolKey calldata key, bool reactive) external view returns (uint128 deltaPlus_) {
+        // TODO(chunk-3): reactive ? reactiveEpochFciStorage() : epochFciStorage()
+        deltaPlus_ = epochDeltaPlus(PoolIdLibrary.toId(key));
+    }
+
+    /// @notice Initialize epoch metric for a pool. Must be called before epoch accumulation begins.
+    /// @param key The pool key.
+    /// @param epochLengthSeconds Epoch duration in seconds (e.g. 86400 for 1 day).
+    function initializeEpochPool(PoolKey calldata key, uint256 epochLengthSeconds) external {
+        initializeEpoch(PoolIdLibrary.toId(key), epochLengthSeconds);
     }
 
     // ── IERC165 ──

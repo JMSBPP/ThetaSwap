@@ -7,9 +7,6 @@ out/
 /broadcast/*/31337/
 /broadcast/**/dry-run/
 
-# Docs
-docs/
-
 # AI utilities and generated content
 aiUtils/
 !aiUtils/foundryAssistant/out/
@@ -82,3 +79,44 @@ notes.md
 
 # Spec drafts
 spec/
+
+# Presentation
+presentation/
+ts-cli/
+
+# Broadcast logs (keep structure, ignore artifacts)
+broadcast/
+
+# Emacs temp/lock files
+\#*\#
+.\#*
+*~
+
+# Playwright MCP
+.playwright-mcp/
+
+# Superpowers brainstorm
+.superpowers/
+
+# Tmp research/analysis artifacts
+tmp/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+out-sol/
+
+# Personal scratch
+notes/
+
+# LaTeX .vrb artifacts
+*.vrb
+
+# Stray venvs
+list/
