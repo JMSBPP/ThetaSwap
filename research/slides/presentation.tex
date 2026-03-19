@@ -37,6 +37,7 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{natbib}
+% Algorithm pseudocode via manual formatting (algorithm2e/algorithmic not installed)
 \bibliographystyle{abbrvnat}
 
 % ── Macros (from preamble.tex — standalone, no \input) ──────────────────────
@@ -320,40 +321,58 @@ On that day, $\DeltaPlus$ jumped from near-zero to \textbf{0.158}.
 
 \end{frame}
 
-% ── Frame: Solution — On-Chain Algorithm ──────────────────────────────────────
-\begin{frame}[fragile]{On-Chain Algorithm}
+% ── Frame: Solution — FCI Algorithm (Tracking) ──────────────────────────────
+\begin{frame}{FCI Algorithm: Position Tracking}
 
-At each position exit (\texttt{afterRemoveLiquidity}):
+\begin{block}{\textsc{AfterAddLiquidity}$(sender, key, params)$}
+\ttfamily\small
+1: $posKey \gets$ Facet.positionKey$(sender, params)$ \\
+2: Facet.addPositionInRange$(posKey, snapshot)$ \\
+3: $baseline_k \gets$ Facet.poolRangeFeeGrowthInside$(poolId, tick, range)$ \\
+4: Facet.setFeeGrowthBaseline$(poolId, posKey, baseline_k)$ \\
+5: $\PosCount \gets \PosCount + 1$
+\end{block}
 
-\medskip
-
-\begin{enumerate}
-  \item Compute fee share:
-    $x_k = \dfrac{\texttt{feeGrowth}_k - \texttt{baseline}_k}{\texttt{rangeFeeGrowth}} \cdot \dfrac{\texttt{posLiq}}{\texttt{totalRangeLiq}}$
-
-  \medskip
-
-  \item Compute theta weight:
-    $\thetapos_k = 1 / \texttt{blockLifetime}_k$
-
-  \medskip
-
-  \item Accumulate into state:
-    $\AT^2 \mathrel{+}= \thetapos_k \cdot x_k^2$
-
-  \medskip
-
-  \item Derive on the fly:
-    $\DeltaPlus = \max(0,\; \sqrt{\AT^2} - \ATnull)$
-\end{enumerate}
+\begin{block}{\textsc{BeforeSwap / AfterSwap}$(key)$}
+\ttfamily\small
+1: $tick_{\text{before}} \gets$ Facet.currentTick$(poolId)$ \\
+2: Facet.tstoreTick$(tick_{\text{before}})$ \hfill\textrm{\itshape\% transient storage} \\
+3: $tick_{\text{after}} \gets$ Facet.currentTick$(poolId)$ \hfill\textrm{\itshape\% after swap} \\
+4: Facet.incrementOverlappingRanges$(poolId, tick_{\min}, tick_{\max})$
+\end{block}
 
 \medskip
 
-All computed on-chain in a single V4 hook callback --- no keeper, no oracle.
+{\footnotesize All calls are \texttt{delegatecall} to the registered protocol facet.
+Protocols implement \texttt{IFCIProtocolFacet} --- same algorithm, any AMM.}
+
+\end{frame}
+
+% ── Frame: Solution — FCI Algorithm (Accumulation) ──────────────────────────
+\begin{frame}{FCI Algorithm: Index Accumulation}
+
+\begin{block}{\textsc{BeforeRemoveLiquidity}$(sender, key, params)$}
+\ttfamily\small
+1: $(posLiq, feeLast_k) \gets$ Facet.latestFeeGrowth$(poolId, posKey)$ \\
+2: $rangeFee \gets$ Facet.poolRangeFeeGrowthInside$(poolId, tick, range)$ \\
+3: Facet.tstoreRemovalData$(feeLast_k, posLiq, rangeFee)$
+\end{block}
+
+\begin{block}{\textsc{AfterRemoveLiquidity}$(sender, key, params)$}
+\ttfamily\small
+1: \textbf{if} partial remove \textbf{then return} \hfill\textrm{\itshape\% skip accumulation} \\
+2: $(swapLife, blockLife, totalLiq) \gets$ Facet.removePosition$(posKey)$ \\
+3: \textbf{if} $swapLife > 0$ \textbf{then}: \\
+\quad 4: $x_k \gets$ fromFeeGrowthDelta$(rangeFee, feeLast_k, baseline_k, posLiq, totalLiq)$ \\
+\quad 5: $\thetapos_k \gets 1 / blockLife$ \\
+\quad 6: $\AT^2 \mathrel{+}= \thetapos_k \cdot x_k^2$ \hfill\textrm{\itshape\% state accumulation} \\
+7: $\PosCount \gets \PosCount - 1$
+\end{block}
 
 \medskip
 
-{\footnotesize Source: \texttt{src/fee-concentration-index-v2/FeeConcentrationIndexV2.sol}, lines 264--287.}
+{\footnotesize Source: \texttt{FeeConcentrationIndexV2.sol}.
+Query: $\DeltaPlus = \max(0, \sqrt{\AT^2} - \ATnull)$ via \texttt{getDeltaPlus()}.}
 
 \end{frame}
 
