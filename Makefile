@@ -11,13 +11,13 @@ build: install verify-data test notebooks
 
 # ── Setup ────────────────────────────────────────────────────────────
 install:
-	git submodule update --init
-	git -C lib/uniswap-hooks submodule update --init lib/v4-core lib/openzeppelin-contracts lib/v4-periphery
-	git -C lib/uniswap-hooks/lib/v4-core submodule update --init lib/solmate
-	git -C lib/uniswap-hooks/lib/v4-periphery submodule update --init lib/permit2
-	git -C lib/v4-periphery submodule update --init lib/permit2
-	git -C lib/2025-12-panoptic submodule update --init lib/v4-core
-	git -C lib/typed-uniswap-v4 submodule update --init lib/foundational-hooks
+	forge install
+	@# Nested submodules forge doesn't handle
+	git -C lib/uniswap-hooks submodule update --init --depth 1 --jobs 4 -- \
+		lib/v4-core lib/openzeppelin-contracts lib/v4-periphery
+	git -C lib/uniswap-hooks/lib/v4-core submodule update --init --depth 1 -- lib/solmate
+	git -C lib/v4-periphery submodule update --init --depth 1 -- lib/permit2
+	git -C lib/typed-uniswap-v4 submodule update --init --depth 1 -- lib/foundational-hooks
 	uv venv $(VENV) --python 3.13
 	uv pip install --python $(PYTHON) -e ".[dev]"
 	$(MAKE) setup-kernel
@@ -33,11 +33,11 @@ show-build:
 	FOUNDRY_PROFILE=lite forge build --no-cache --threads 6
 
 sol-test:
-	forge test --no-cache --match-path "test/fci-token-vault/**" -vv
-	forge test --no-cache --match-path "test/fee-concentration-index-v2/**" -vv
+	forge test --match-path "test/fci-token-vault/**" -vv
+	forge test --match-path "test/fee-concentration-index-v2/**" -vv
 
 sol-test-demo:
-	forge test --no-cache --match-path "test/fee-concentration-index-v2/protocols/uniswapV4/*" -vv
+	forge test --match-path "test/fee-concentration-index-v2/protocols/uniswapV4/*" -vv
 
 # ── Python ───────────────────────────────────────────────────────────
 test-py:
