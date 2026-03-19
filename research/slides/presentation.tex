@@ -285,74 +285,30 @@ concentration spikes --- no moral hazard.
 % ── Frame: Backtest — Reserve Dynamics ───────────────────────────────────────
 \begin{frame}{Backtest: Reserve Dynamics}
 
-\begin{columns}[T]
-
-\begin{column}{0.50\textwidth}
-Reserve trajectories at different seed capital levels show the
-\textbf{bootstrapping problem} and its resolution:
-
-\begin{itemize}
-  \item Without seed capital ($R_0 = 0$): 0\% of positions better off ---
-    reserve too small at trigger time
-  \item With underwriter seed ($R_0 = \$200$K): reserve absorbs the
-    concentration spike and delivers positive hedge value
-  \item This validates the \textbf{hybrid architecture}: the CFMM market
-    layer provides initial liquidity
-\end{itemize}
+\begin{center}
+\includegraphics[width=0.85\textwidth]{../figures/reserve-dynamics.png}
+\end{center}
 
 \medskip
 
-{\footnotesize Full backtest methodology and payoff comparison:
-\texttt{notebooks/eth-usdc-backtest.ipynb} and \texttt{model/main.pdf} \S3.}
-\end{column}
-
-\begin{column}{0.45\textwidth}
-\begin{center}
-\includegraphics[width=\textwidth]{../figures/reserve-dynamics.png}
-\end{center}
-\end{column}
-
-\end{columns}
-
-\end{frame}
-
-% ── Frame 9: Evidence — The Inverted-U (Dose-Response) ──────────────────────
-\begin{frame}{Tail Risk: The Inverted-U}
-
-\begin{columns}[T]
-
-\begin{column}{0.50\textwidth}
-The dose-response plot reveals the nonlinear structure:
-
-\begin{itemize}
-  \item Exit rates are \textbf{stable at baseline} when concentration
-    is at or below the competitive null (Q1--Q2)
-  \item They \textbf{spike} at moderate concentration (Q3) ---
-    the adverse regime activates
-  \item At extreme concentration (Q4), exits drop --- these rare events
-    are driven by volume spikes that benefit all LPs
-\end{itemize}
+At $R_0 = \$200$K seed capital, the reserve absorbs the concentration spike
+and delivers positive hedge value.
 
 \medskip
 
-This is the signature of a \textbf{classic insurable tail risk}: rare,
-severe, and distinct from price-driven losses.
-\end{column}
-
-\begin{column}{0.45\textwidth}
-\begin{center}
-\includegraphics[width=\textwidth]{../figures/dose-response.png}
-\end{center}
-\end{column}
-
-\end{columns}
+{\footnotesize See \texttt{notebooks/eth-usdc-backtest.ipynb} and
+\texttt{model/main.pdf} \S3 for full methodology.}
 
 \end{frame}
 
-% ── Frame 10: Evidence — Tail Risk Confirmation ─────────────────────────────
 \begin{frame}{Tail Risk Confirmation}
 
 \begin{columns}[T]
+
+ %note: Same pattern as above bigi center of the scereen image small   \item \textbf{Only 1 day in 41} exceeds the turning point $\DeltaStar  \item On that day, $\DeltaPlus$ jumped from near-zero to \textbf{0.158} prosed \textbf{Rare but severe} --- the adverse regime is a tail event.
+% A small, predictable premium protects against low-probability,
+% high-impact concentration spikes. adn reference pointers to the SEE more
+
 
 \begin{column}{0.50\textwidth}
 Daily concentration deviation over 41 days:
