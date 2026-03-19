@@ -207,4 +207,95 @@ At $\Delta = 0.15$: marginal effect $= 2.27$ \\
 
 \end{frame}
 
-% --- Solution, Demo, Roadmap frames in Plan 02 ---
+% ── Frame 7: Solution — Architecture ─────────────────────────────────────────
+\begin{frame}{Architecture}
+
+\begin{center}
+\includegraphics[width=\textwidth]{../../docs/diagrams/context-diagram.png}
+\end{center}
+
+\medskip
+
+FCI Hook at center --- protocol adapters (V3, V4) feed swap/mint/burn events,
+Reactive Network bridges metrics cross-chain, Vault + CFMM settle downstream.
+
+\end{frame}
+
+% ── Frame 8: Solution — Cross-Protocol Modularity ────────────────────────────
+\begin{frame}{Cross-Protocol Modularity}
+
+\begin{center}
+\includegraphics[height=0.75\textheight]{../../docs/diagrams/sequence-diagram.png}
+\end{center}
+
+\medskip
+
+\texttt{listenPool()} $\to$ swap/mint/burn events $\to$ metric update $\to$
+$\DeltaPlus$ derivation. \\
+Same FCI oracle, multiple protocol adapters, reactive network bridges events
+cross-chain.
+
+\end{frame}
+
+% ── Frame 9: Demo — Live Demo ────────────────────────────────────────────────
+\begin{frame}{Live Demo}
+
+\begin{block}{Run the integration test}
+\small
+\texttt{forge test --match-path} \\
+\texttt{"test/fee-concentration-index-v2/protocols/uniswapV4/} \\
+\texttt{NativeV4FeeConcentrationIndex.integration.t.sol" -vv}
+\end{block}
+
+\bigskip
+
+\textbf{What to observe:}
+
+\begin{enumerate}
+  \item Swap updates $\AT$ --- fee concentration index tracks each trade
+  \item Mint increments $\PosCount$ --- new positions enter the pool
+  \item Burn triggers $\DeltaPlus$ derivation --- exit computes concentration
+    deviation
+  \item All metrics computed on-chain in a single V4 hook callback
+\end{enumerate}
+
+\end{frame}
+
+% ── Frame 10: Roadmap — What's Next ──────────────────────────────────────────
+\begin{frame}{What's Next}
+
+\begin{columns}[T]
+
+\begin{column}{0.48\textwidth}
+\textbf{Built}
+
+\begin{itemize}
+  \item FCI oracle live on Uniswap V4
+  \item Reactive adapter bridging V3 events cross-chain
+  \item Backtest validation: 18.8\% of positions better off hedged,
+    +\$23 mean hedge value
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Next}
+
+\begin{itemize}
+  \item Linearized power-squared CFMM (trading function complete in spec)
+  \item Vault settlement mechanism
+\end{itemize}
+\end{column}
+
+\end{columns}
+
+\bigskip
+
+\begin{center}
+\textit{The mathematical specification is complete, the oracle tracks metrics
+across protocols, and the next milestone delivers the full insurance product.}
+\end{center}
+
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\end{document}
