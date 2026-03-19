@@ -13,8 +13,90 @@
 </p>
 
 <p align="center">
-  <a href="#architecture">Architecture</a> · <a href="#quick-start--demo">Demo</a> · <a href="#repository-structure">Directory</a>
+  <a href="#quick-start">Quick Start</a> · <a href="#overview">Overview</a> · <a href="#architecture">Architecture</a> · <a href="#repository-structure">Directory</a>
 </p>
+
+---
+
+## Prerequisites
+
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) (forge, cast, anvil)
+- Python >= 3.11
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+
+## Quick Start
+
+```bash
+# Clone
+git clone https://github.com/wvs-finance/ThetaSwap-core.git
+cd ThetaSwap-core
+
+# One-command setup (submodules + venv + deps + Jupyter kernel)
+make install
+
+# Run all tests
+make sol-test        # Solidity
+make test-py         # Python
+```
+
+## Solidity
+
+```bash
+make show-build      # src-only build, no cache, optimized threads
+make sol-test        # vault + FCI V2 test suites
+make sol-test-demo   # NativeV4 FCI integration scenarios (full trace)
+```
+
+## Python (Econometrics + Backtest)
+
+```bash
+# Run Python tests
+make test-py
+
+# Execute all notebooks headless
+make notebooks
+```
+
+Research code lives in `research/` — see [research/README.md](research/README.md) for details.
+
+### Manual Python Setup (without Make)
+
+```bash
+uv venv uhi8 --python 3.13
+uv pip install --python uhi8/bin/python -e ".[dev]"
+```
+
+### Running Notebooks
+
+```bash
+jupyter lab --notebook-dir=research/notebooks
+```
+
+Select the **thetaswap** kernel when opening notebooks.
+
+## Repository Structure
+
+```
+src/
+  fee-concentration-index-v2/  FCI V2 orchestrator + protocol facets
+  fci-token-vault/             Insurance token vault
+  libraries/                   Shared math libraries
+  types/                       Type extensions (Ext.sol convention)
+  protocol-adapter/            Reactive Network adapter
+test/                          Forge tests (unit, fuzz, integration)
+research/
+  backtest/                    Insurance backtest engine
+  econometrics/                Hazard + duration + cross-pool models
+  data/                        Dune queries, fixtures, frozen datasets
+  model/                       LaTeX spec + PDF
+  notebooks/                   Reproducible result notebooks
+  simulator/                   Python FCI simulator
+  tests/                       Python test suite (114 tests)
+specs/                         Per-feature contract specifications
+script/                        Forge deployment scripts
+docs/plans/                    Branch-specific implementation plans
+lib/                           Foundry dependencies (submodules)
+```
 
 ---
 
@@ -25,52 +107,6 @@ When multiple liquidity providers supply capital to a DEX pool, each should earn
 ## Architecture
 
 FCI Hook is a protocol-agnostic orchestrator that dispatches behavioral calls via `delegatecall` to registered protocol facets.
-
-### System Context
-
-Solid border = live on testnet. Dashed border = planned.
-
-```mermaid
-flowchart TB
-    PLP["PLP (Passive LP)"]
-    UW["Underwriter"]
-    TR["Trader"]
-    FCI["FCI Hook<br/>(Orchestrator)<br/><i>FeeConcentrationIndexV2.sol</i>"]
-    V4["Uniswap V4 Adapter<br/><i>NativeUniswapV4Facet</i>"]
-
-    subgraph V3Sub["Uniswap V3 Adapter"]
-        V3Facet["UniswapV3Facet"]
-        RN["Reactive Network<br/><i>UniswapV3Reactive +<br/>UniswapV3Callback</i>"]
-    end
-
-    PN["Protocol N<br/>(planned)"]
-    VAULT["Token Vault<br/>(planned)<br/><i>CollateralCustodianFacet</i>"]
-    CFMM["CFMM<br/>(planned)<br/><i>Price Discovery</i>"]
-
-    FCI -- "tracks metrics<br/>(afterSwap() delegatecall)" --> V4
-    FCI -- "bridges events<br/>(unlockCallbackReactive())" --> V3Sub
-    FCI -. "implements IFCIProtocolFacet" .-> PN
-    FCI -- "provides DeltaPlus oracle<br/>(getDeltaPlus())" --> VAULT
-    RN -- "V3 Swap log --> ReactVM --> Callback" --> V3Facet
-    VAULT -. "price discovery" .-> CFMM
-    PLP -- "deposits collateral" --> VAULT
-    UW -- "provides USDC" --> VAULT
-    TR -- "trades LONG/SHORT" --> CFMM
-    classDef live fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#155724
-    classDef orchestrator fill:#cce5ff,stroke:#004085,stroke-width:3px,color:#004085
-    classDef planned fill:#fff3cd,stroke:#856404,stroke-width:2px,stroke-dasharray:5 5,color:#856404
-    classDef actor fill:#e2e3e5,stroke:#383d41,stroke-width:1px,color:#383d41
-    classDef reactive fill:#d1ecf1,stroke:#0c5460,stroke-width:2px,color:#0c5460
-
-    class FCI orchestrator
-    class V4 live
-    class V3Facet live
-    class RN reactive
-    class PN planned
-    class VAULT planned
-    class CFMM planned
-    class PLP,UW,TR actor
-```
 
 ### Pool Listening Flow
 
@@ -167,27 +203,3 @@ sequenceDiagram
 
     Note over Caller,Reader: Mint/burn follow the same delegatecall pattern<br/>with position-level fee growth accounting
 ```
-
-## Quick Start / Demo
-
-```bash
-forge test --match-path "test/fee-concentration-index-v2/protocols/uniswapV4/NativeV4FeeConcentrationIndex.integration.t.sol" -vv
-```
-
-What the integration test demonstrates:
-
-- **Swap scenario:** each swap updates the A_T accumulator by computing fee share ratios across overlapping positions
-- **Mint scenario:** adding liquidity increments position count N and registers the position for FCI tracking
-- **Burn scenario:** removing liquidity triggers fee share computation (xk), accumulates the FCI state term, and derives DeltaPlus
-- **DeltaPlus query:** external readers call `getDeltaPlus()` to get the insurance-relevant oracle value (`max(0, 1 - A_T)`)
-- **Cross-protocol:** the same orchestrator logic works for both V4 native hooks and V3 via Reactive Network callbacks
-
-## Repository Structure
-
-| Directory | Description |
-|-----------|-------------|
-| `src/` | Solidity contracts: FCI V2 orchestrator, protocol facets (V4 native, V3 reactive), vault, libraries |
-| `test/` | Forge test suites: unit, fuzz, fork, and integration tests |
-| `research/` | Econometric analysis, backtest engine, mathematical model, data fixtures ([detailed README](research/README.md)) |
-| `docs/` | Architecture diagrams (mermaid), implementation plans |
-| `specs/` | Contract specifications (per-feature) |
