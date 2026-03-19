@@ -1,0 +1,62 @@
+% presentation.tex — ThetaSwap Beamer Slide Deck
+% Adverse Competition Oracle: Problem, Evidence, Solution, Demo, Roadmap
+% Frames 1-6 (Title + Problem + Evidence) — Plan 04-01
+% Frames 7-10 (Solution + Demo + Roadmap) — Plan 04-02
+
+\documentclass[aspectratio=169]{beamer}
+
+% ── Theme and Colors ─────────────────────────────────────────────────────────
+\usetheme{Madrid}
+\definecolor{thetablue}{RGB}{20,40,80}
+
+% Override beamer colors for dark blue + white
+\setbeamercolor{structure}{fg=thetablue}
+\setbeamercolor{palette primary}{bg=thetablue,fg=white}
+\setbeamercolor{palette secondary}{bg=thetablue!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=thetablue!60,fg=white}
+\setbeamercolor{palette quaternary}{bg=thetablue,fg=white}
+\setbeamercolor{frametitle}{bg=thetablue,fg=white}
+\setbeamercolor{title}{fg=white,bg=thetablue}
+\setbeamercolor{subtitle}{fg=white}
+\setbeamercolor{author}{fg=white}
+\setbeamercolor{date}{fg=white}
+\setbeamercolor{institute}{fg=white}
+\setbeamercolor{block title}{bg=thetablue,fg=white}
+\setbeamercolor{block body}{bg=thetablue!5,fg=black}
+\setbeamercolor{item}{fg=thetablue}
+\setbeamercolor{normal text}{fg=black,bg=white}
+
+% Remove navigation symbols and section navigation bar
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+
+% ── Packages ─────────────────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+% ── Macros (from preamble.tex — standalone, no \input) ──────────────────────
+\newcommand{\AT}{A_T}
+\newcommand{\ThetaSum}{\Theta}
+\newcommand{\PosCount}{N}
+\newcommand{\ATnull}{A_T^{1/\PosCount}}
+\newcommand{\DeltaPlus}{\Delta^{+}}
+\newcommand{\DeltaStar}{\Delta^{*}}
+\newcommand{\thetapos}{\theta}
+\newcommand{\blocklife}{\ell}
+
+% ── Title Metadata ───────────────────────────────────────────────────────────
+\title{ThetaSwap: Adverse Competition Oracle}
+\author{ThetaSwap}
+\date{\today}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Frame 1: Title ───────────────────────────────────────────────────────────
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+% --- Evidence and remaining frames follow ---
