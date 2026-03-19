@@ -2,7 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {IFCIProtocolFacet} from "@fee-concentration-index-v2/interfaces/IFCIProtocolFacet.sol";
-import {CalldataReader, CalldataReaderLib} from "angstrom/src/types/CalldataReader.sol";
+import {CalldataReader, CalldataReaderLib} from "@types/CalldataReader.sol";
 import {NATIVE_V4} from "@fee-concentration-index-v2/types/FlagsRegistry.sol";
 
 struct FeeConcentrationIndexRegistryStorage {

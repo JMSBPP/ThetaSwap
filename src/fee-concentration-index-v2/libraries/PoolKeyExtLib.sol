@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {Currency} from "v4-core/src/types/Currency.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
-import {CalldataReader, CalldataReaderLib} from "angstrom/src/types/CalldataReader.sol";
+import {CalldataReader, CalldataReaderLib} from "@types/CalldataReader.sol";
 
 /// @dev Reads a protocol pool representation and builds a V4-shaped PoolKey.
 /// Currently only reads a single address from poolRpt.
