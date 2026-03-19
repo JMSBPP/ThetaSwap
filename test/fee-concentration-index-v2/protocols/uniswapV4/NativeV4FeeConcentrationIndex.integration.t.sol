@@ -266,6 +266,7 @@ contract NativeV4FeeConcentrationIndex_IntegrationTest is PosmTestSetup {
         console2.log("  == RESULT: DeltaPlus =", uint256(actualDeltaPlus));
         console2.log("  == RESULT: IndexA =", uint256(actualIndexA), "AtNull =", uint256(actualAtNull));
         console2.log("  == RESULT: ThetaSum =", actualThetaSum, "RemovedPosCount =", actualRemovedPosCount);
+        console2.log("  == RESULT: DeltaPlusEpoch =", uint256(actualDeltaPlusEpoch), "(must match DeltaPlus within same epoch)");
 
         // ── Cross-getter consistency ──
         // getDeltaPlus() == max(0, indexA - atNull)
