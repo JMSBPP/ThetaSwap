@@ -22,7 +22,7 @@ import {
     deregisterPosition, addStateTerm, incrementPosCount, decrementPosCount,
     incrementOverlappingRanges
 } from "@protocol-adapter/modules/ProtocolAdapterMod.sol";
-import {CalldataReader, CalldataReaderLib} from "angstrom/src/types/CalldataReader.sol";
+import {CalldataReader, CalldataReaderLib} from "@types/CalldataReader.sol";
 import {TickRangeRegistryLib} from "typed-uniswap-v4/types/TickRangeRegistryMod.sol";
 import {
     getCurrentTick,
