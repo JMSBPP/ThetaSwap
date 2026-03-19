@@ -87,7 +87,7 @@ This is \textbf{adverse competition} --- a distinct, unhedged risk.
 
 \end{frame}
 
-% ── Frame 3: Research Question & Methodology ─────────────────────────────────
+% ── Frame 3: Research Question ────────────────────────────────────────────────
 \begin{frame}{Research Question}
 
 \textbf{Is there empirical demand for a hedging instrument against adverse
@@ -100,50 +100,87 @@ ETH/USDC 30bps pool (Uniswap V3 mainnet) \\
 41 days $\cdot$ 600 positions $\cdot$ 3,365 position-day observations $\cdot$ 597 exits
 \end{block}
 
-\medskip
+\bigskip
 
-\textbf{Methodology:}
+\textbf{Treatment variable --- concentration deviation:}
+\begin{center}
+\boxed{
+  \DeltaPlus = \max\!\bigl(0,\; \AT - \ATnull\bigr)
+}
+\end{center}
+
 \begin{itemize}
-  \item Compute fee concentration index $\AT$ and competitive null $\ATnull$
-    per day from on-chain Collect/Burn/Mint events
-  \item Define treatment variable: deviation $\Delta = \AT - \ATnull$
-  \item Estimate exit hazard as a function of $\Delta$ with IL and position
-    age controls, clustered standard errors
-  \item Real $\AT$ exceeds the null by $2.65\times$ on average; 63\% of days
-    show $\DeltaPlus > 0$
+  \item $\AT = \bigl(\sum_k \thetapos_k \cdot x_k^2\bigr)^{1/2}$ \quad
+    fee concentration index ($x_k$ = fee share, $\thetapos_k = 1/\text{blocklife}$)
+  \item $\ATnull = \sqrt{\ThetaSum / \PosCount^2}$ \quad
+    Ma--Crapis competitive null (equal shares $x_k = 1/\PosCount$)
+  \item $\DeltaPlus > 0$: fees more concentrated than the symmetric equilibrium
 \end{itemize}
 
 \end{frame}
 
-% ── Frame 4: Evidence — Model Specification ──────────────────────────────────
-\begin{frame}{Model Specification}
-
-\textbf{Why quadratic?} A linear model yields $\beta_1 < 0$ (shelter effect)
---- concentration correlates with volume, masking the exit signal. Dose-response
-analysis reveals non-monotonicity: exits peak at moderate $\Delta$, then drop.
-A quadratic term captures both regimes in one specification.
-
-\medskip
+% ── Frame 4: Model — The Shelter Component ───────────────────────────────────
+\begin{frame}{Model: The Shelter Component}
 
 \begin{center}
-\boxed{
-  P(\text{exit}_{i,t}) = \sigma\!\bigl(
-    \beta_0
-    + \beta_1 \underbrace{\Delta_{t-\ell}}_{\text{shelter}}
-    + \beta_2 \underbrace{\Delta_{t-\ell}^2}_{\text{Capponi exit}}
-    + \beta_3 \,\text{IL}_t
-    + \beta_4 \log(\text{age}_{i,t})
-  \bigr)
-}
+$P(\text{exit}_{i,t}) = \sigma\!\bigl(
+  \beta_0
+  + \beta_1 \,\textcolor{red}{\boxed{\Delta_{t-\ell}}}
+  + \beta_2 \,\Delta_{t-\ell}^2
+  + \beta_3 \,\text{IL}_t
+  + \beta_4 \log(\text{age}_{i,t})
+\bigr)$
 \end{center}
 
-\medskip
+\bigskip
+
+\textbf{We expect $\beta_1 < 0$} (shelter effect):
 
 \begin{itemize}
-  \item $\Delta = \AT - \ATnull$: deviation from competitive null
-  \item $\text{IL}_t$: impermanent loss control (orthogonality test)
-  \item $\log(\text{age})$: duration dependence
-  \item \textbf{Expected:} $\beta_1 < 0$ (shelter), $\beta_2 > 0$ (exit above threshold)
+  \item Mild fee concentration correlates with \emph{high trading volume}
+    --- the pool is active, all LPs benefit from elevated fee revenue
+
+  \item At low $\Delta$, more concentration means more volume,
+    which \emph{lowers} exit probability
+
+  \item This is \textbf{healthy competition}: sophisticated LPs attract flow
+    that benefits everyone \citep{capponi2024jit}
+
+  \item A linear-only model would conclude concentration is \emph{protective}
+    --- missing the adverse regime entirely
+\end{itemize}
+
+\end{frame}
+
+% ── Frame 5: Model — The Adverse Competition Component ──────────────────────
+\begin{frame}{Model: The Adverse Competition Component}
+
+\begin{center}
+$P(\text{exit}_{i,t}) = \sigma\!\bigl(
+  \beta_0
+  + \beta_1 \,\Delta_{t-\ell}
+  + \beta_2 \,\textcolor{green!50!black}{\boxed{\Delta_{t-\ell}^2}}
+  + \beta_3 \,\text{IL}_t
+  + \beta_4 \log(\text{age}_{i,t})
+\bigr)$
+\end{center}
+
+\bigskip
+
+\textbf{We expect $\beta_2 > 0$} (adverse competition):
+
+\begin{itemize}
+  \item Beyond a threshold, concentration no longer signals volume ---
+    it signals \emph{fee extraction} by sophisticated actors
+
+  \item Passive LP's effective fee rate $\hat{\phi}_i = x_i \cdot \phi_{\text{pool}}$
+    drops below exit threshold \citep{capponi2024optimal}
+
+  \item The quadratic term $\Delta^2$ captures this \textbf{nonlinear regime shift}:
+    the marginal effect of concentration \emph{flips sign} at the turning point
+
+  \item Together: $\beta_1 < 0$ + $\beta_2 > 0$ $=$ \textbf{inverted-U} with
+    turning point $\DeltaStar = -\beta_1 / (2\beta_2)$
 \end{itemize}
 
 \end{frame}
